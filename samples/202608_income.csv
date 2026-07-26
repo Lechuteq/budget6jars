@@ -1,0 +1,5 @@
+date,description,bank_category,value,type,income_type
+2026-08-10,WYPLATA WYNAGRODZENIA - PRACODAWCA SP. Z O.O.,Wynagrodzenie,6950.0,account,salary
+2026-08-15,SPRZEDAZ - VINTED PRZELEW,Sprzedaz,145.0,account,selling
+2026-08-25,ODSETKI KONTO OSZCZEDNOSCIOWE,Odsetki,18.42,account,passive
+2026-08-29,PLANOWANA PREMIA KWARTALNA (PROGNOZA),Premia,1200.0,account,additional

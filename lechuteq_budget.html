@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lechuteq Budget - T. Harv Eker - 6 Jars Money Management System</title>
+<style>
+  :root {
+    --bg: #f4f6f5;
+    --panel: #ffffff;
+    --ink: #1f2a24;
+    --muted: #6b7a71;
+    --accent: #2e5b4f;
+    --accent-light: #e5efec;
+    --good: #2e7d32;
+    --good-bg: #e8f5e9;
+    --bad: #b00020;
+    --bad-bg: #fdecea;
+    --border: #dfe5e2;
+    --paste-bg: #fffde7;
+    --info: #1565c0;
+    --info-bg: #e3f0fc;
+  }
+  html[data-theme="dark"] {
+    --bg: #14181a;
+    --panel: #1e2528;
+    --ink: #e8ece9;
+    --muted: #93a39a;
+    --accent: #6fcf9e;
+    --accent-light: #223129;
+    --good: #6fcf9e;
+    --good-bg: #1c3327;
+    --bad: #ff6b6b;
+    --bad-bg: #3a1e1e;
+    --border: #303a3d;
+    --paste-bg: #2a2717;
+    --info: #6fb3f2;
+    --info-bg: #17293a;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding: 14px 20px;
+    font-size: 14px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  h1 {
+    font-size: 18px;
+    margin: 0 0 2px 0;
+    color: var(--accent);
+  }
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  #todayDate {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
+  .toggle-group {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .toggle-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    color: white;
+  }
+  .toggle-btn:hover:not(.active) { opacity: 0.8; background: var(--accent-light); }
+  .subtitle { color: var(--muted); margin-bottom: 10px; font-size: 12px; }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 7px 16px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+  }
+  .card h2 {
+    font-size: 14px;
+    margin: 0 0 8px 0;
+    color: var(--accent);
+  }
+  .card h3 {
+    font-size: 14px;
+    margin: 18px 0 8px 0;
+    color: var(--accent);
+  }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  label { font-size: 12px; color: var(--muted); margin-right: 6px; }
+  input[type="text"], input[type="month"], input[type="number"], input[type="date"], select {
+    padding: 5px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+  button {
+    padding: 6px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.9; }
+  button.secondary {
+    background: var(--panel);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  button.danger { background: var(--bad); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  th[data-sort-key] { cursor: pointer; user-select: none; white-space: nowrap; }
+  th[data-sort-key]:hover { text-decoration: underline; }
+  th[data-sort-key]::after { content: ""; display: inline-block; width: 10px; }
+  th[data-sort-key].sort-asc::after { content: "▲"; font-size: 9px; margin-left: 2px; }
+  th[data-sort-key].sort-desc::after { content: "▼"; font-size: 9px; margin-left: 2px; }
+  td input, td select {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 4px 6px;
+    font-size: 13px;
+    border-radius: 4px;
+    color: var(--ink);
+  }
+  td input:hover, td select:hover, td input:focus, td select:focus {
+    border-color: var(--border);
+    background: var(--accent-light);
+  }
+  .table-wrap { max-height: min(65vh, 560px); overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  /* Income/Outcome column widths: narrow Date and Value, wide Description and Additional info */
+  #incomeTable, #outcomeTable { table-layout: fixed; }
+  #incomeTable th:nth-child(1), #outcomeTable th:nth-child(1) { width: 8%; }   /* Date */
+  #incomeTable th:nth-child(2), #outcomeTable th:nth-child(2) { width: 34%; }  /* Description */
+  #incomeTable th:nth-child(3), #outcomeTable th:nth-child(3) { width: 29%; }  /* Additional info */
+  #incomeTable th:nth-child(4), #outcomeTable th:nth-child(4) { width: 8%; }   /* Value */
+  #incomeTable th:nth-child(5), #outcomeTable th:nth-child(5) { width: 9%; }   /* Type */
+  #incomeTable th:nth-child(6), #outcomeTable th:nth-child(6) { width: 9%; }   /* Income type / Jar */
+  #incomeTable th:nth-child(7), #outcomeTable th:nth-child(7) { width: 3%; }   /* delete */
+  #incomeTable td, #outcomeTable td { overflow: hidden; }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 10px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--paste-bg);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .jar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .jar-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    padding-top: 16px;
+    background: var(--panel);
+    position: relative;
+    min-height: 216px;
+  }
+  .jar-card .code { font-weight: 700; font-size: 14px; color: var(--accent); margin-top: 28px; }
+  .jar-card .name { font-size: 12.75px; color: var(--muted); margin-bottom: 6px; }
+  .jar-icon {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 69px;
+    height: 69px;
+  }
+  .jar-icon svg { width: 100%; height: 100%; display: block; }
+  .jar-icon .jar-icon-label {
+    font-family: Segoe UI, Arial, sans-serif;
+    font-size: 7px;
+    font-weight: 700;
+  }
+  .bar-bg {
+    height: 18px;
+    background: var(--border);
+    border-radius: 5px;
+    margin: 6px 0 5px 0;
+    position: relative;
+  }
+  .bar-fill { height: 100%; border-radius: 5px; transition: background 0.2s; }
+  .bar-fill.ok { background: var(--good); }
+  .bar-fill.warn { background: var(--bad); }
+  .bar-fill-clip {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .goal-marker {
+    position: absolute;
+    top: -3px;
+    width: 3px;
+    height: 24px;
+    background: var(--ink);
+    border-radius: 1.5px;
+    z-index: 2;
+  }
+  .jar-nums { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+  .jar-nums b { color: var(--ink); font-size: 13px; }
+  .diff-pos { color: var(--good); }
+  .diff-neg { color: var(--bad); }
+  .status-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+  }
+  .status-badge.ok { background: var(--good-bg); color: var(--good); }
+  .status-badge.info { background: var(--info-bg); color: var(--info); }
+  #monthStatusBadge { margin-top: 0; }
+  .status-badge.warn { background: var(--bad-bg); color: var(--bad); }
+  .balance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .balance-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 10px 4px;
+    background: var(--panel);
+    position: relative;
+  }
+  .balance-card .label { font-size: 10px; color: var(--muted); margin-bottom: 1px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .balance-card .amount { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+  .balance-card .start-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .balance-card .start-row input { width: 90px; }
+  .balances-desc-inline {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-top-right {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    text-align: right;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .card-top-right.ok { background: var(--good-bg); color: var(--good); }
+  .card-top-right.warn { background: var(--bad-bg); color: var(--bad); }
+  .card-header-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .jars-title-group { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .save-csv-btn { font-weight: 700; border: none; }
+  .save-csv-btn.dirty { background: var(--bad); color: #fff; }
+  .save-csv-btn.dirty:hover { background: var(--bad); filter: brightness(1.1); }
+  .save-csv-btn.clean { background: var(--good); color: #fff; }
+  .save-csv-btn.clean:hover { background: var(--good); filter: brightness(1.1); }
+  .jars-all-green-msg {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--good);
+  }
+  .currency-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .total-month-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 10px;
+    margin: 4px 0 6px;
+  }
+  .total-month-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .total-month-value {
+    font-size: 19px;
+    font-weight: 800;
+    padding: 1px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .total-month-value.ok { background: var(--good-bg); color: var(--good); }
+  .total-month-value.warn { background: var(--bad-bg); color: var(--bad); }
+  .status-msg {
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+  .status-ok { background: var(--good-bg); color: var(--good); }
+  .status-err { background: var(--bad-bg); color: var(--bad); }
+  .mismatch-banner {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--bad-bg);
+    color: var(--bad);
+    border: 1px solid var(--bad);
+  }
+  .small { font-size: 11px; color: var(--muted); }
+  input.value-invalid { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); font-weight: 700; }
+  .jars-header-right { display: flex; align-items: center; gap: 12px; }
+  .jars-totals { text-align: right; }
+  .jars-total-line { font-size: 12px; font-weight: 600; color: var(--muted); line-height: 1.5; }
+  .table-total-line { font-size: 13px; font-weight: 600; color: var(--muted); margin: 4px 0 8px; }
+  .file-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .del-btn { color: var(--bad); cursor: pointer; font-weight: 700; }
+  .manual-lang-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .manual-lang-tab {
+    padding: 6px 14px;
+    border: 1px solid var(--accent);
+    background: var(--panel);
+    color: var(--accent);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .manual-lang-tab.active { background: var(--accent); color: white; }
+  .manual-content { display: none; line-height: 1.6; font-size: 14px; }
+  .manual-content.active { display: block; }
+  .manual-content h3 { color: var(--accent); margin-top: 22px; }
+  .manual-content h3:first-child { margin-top: 0; }
+  .manual-content ul, .manual-content ol { padding-left: 20px; }
+  .manual-content code { background: var(--accent-light); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .manual-content blockquote {
+    margin: 10px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-light);
+    font-style: italic;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="header-row">
+  <div>
+    <h1>Lechuteq Budget - T. Harv Eker - 6 Jars Money Management System</h1>
+    <div class="subtitle" data-i18n="subtitle"></div>
+  </div>
+  <div class="header-controls">
+    <div class="toggle-group" id="themeToggle">
+      <button class="toggle-btn" data-theme-choice="light">&#9728;</button>
+      <button class="toggle-btn" data-theme-choice="dark">&#9789;</button>
+    </div>
+    <div class="toggle-group" id="langToggle">
+      <button class="toggle-btn" data-lang-choice="en">EN</button>
+      <button class="toggle-btn" data-lang-choice="pl">PL</button>
+    </div>
+    <div id="todayDate"></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="dashboard" data-i18n="tab.dashboard"></button>
+  <button class="tab" data-tab="import" data-i18n="tab.import"></button>
+  <button class="tab" data-tab="income" data-i18n="tab.income"></button>
+  <button class="tab" data-tab="outcome" data-i18n="tab.outcome"></button>
+  <button class="tab" data-tab="manual" data-i18n="tab.manual"></button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="panel active" id="panel-dashboard">
+  <div class="card">
+    <div class="row">
+      <label for="monthFilter" data-i18n="dashboard.monthLabel"></label>
+      <input type="month" id="monthFilter">
+      <span id="monthStatusBadge" class="status-badge"></span>
+      <span class="small" id="monthSummary"></span>
+      <button id="saveCsvBtn" class="save-csv-btn clean" style="margin-left:auto;"></button>
+    </div>
+    <div id="importedMonthMismatch"></div>
+  </div>
+
+  <div class="card balances-card">
+    <div class="card-header-row">
+      <h2 style="margin-bottom:0;" data-i18n="dashboard.balancesTitle"></h2>
+      <p class="small balances-desc-inline" data-i18n="dashboard.balancesDesc"></p>
+      <div class="currency-select-wrap">
+        <label for="currencySelect" style="margin:0;" data-i18n="dashboard.currencyLabel"></label>
+        <select id="currencySelect">
+          <option value="PLN">PLN</option>
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+    </div>
+    <div class="total-month-row">
+      <span class="total-month-label" data-i18n="dashboard.totalMonthLabel"></span>
+      <span id="totalThisMonthBadge" class="total-month-value"></span>
+    </div>
+    <div class="balance-grid" id="balanceGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header-row">
+      <div class="jars-title-group">
+        <h2 style="margin-bottom:0;" data-i18n="dashboard.jarsTitle"></h2>
+        <div id="jarsAllGreenMsg" class="jars-all-green-msg" style="display:none;"></div>
+      </div>
+      <div class="jars-header-right">
+        <span id="jarsFillStatus" class="status-badge"></span>
+        <div class="jars-totals">
+          <div class="jars-total-line" id="jarsIncomeLine"></div>
+          <div class="jars-total-line" id="jarsSpentLine"></div>
+        </div>
+      </div>
+    </div>
+    <p class="small" data-i18n="dashboard.jarsDesc"></p>
+    <div class="jar-grid" id="jarGrid"></div>
+  </div>
+</div>
+
+<!-- IMPORT -->
+<div class="panel" id="panel-import">
+  <div class="card">
+    <h2 data-i18n="import.step1Title"></h2>
+    <p class="small" data-i18n="import.step1Desc"></p>
+    <div class="row">
+      <label data-i18n="import.incomeCsvLabel"></label>
+      <input type="file" id="incomeFileInput" accept=".csv">
+      <label data-i18n="import.outcomeCsvLabel"></label>
+      <input type="file" id="outcomeFileInput" accept=".csv">
+    </div>
+    <div id="loadStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="import.step2Title"></h2>
+    <p class="small" data-i18n="import.step2Desc"></p>
+    <textarea id="pasteArea"></textarea>
+    <div class="row" style="margin-top:10px;">
+      <button id="importBtn" data-i18n="import.importBtn"></button>
+      <button class="secondary" id="clearPasteBtn" data-i18n="import.clearBtn"></button>
+    </div>
+    <div id="importStatus"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="import.step3Title"></h2>
+    <p class="small" data-i18n="import.step3Desc"></p>
+    <div class="file-btns">
+      <button id="downloadIncomeBtn" data-i18n="import.downloadIncomeBtn"></button>
+      <button id="downloadOutcomeBtn" data-i18n="import.downloadOutcomeBtn"></button>
+    </div>
+  </div>
+</div>
+
+<!-- INCOME -->
+<div class="panel" id="panel-income">
+  <div class="card">
+    <h2 data-i18n="tab.income"></h2>
+    <div class="table-total-line" id="incomeTotalLine"></div>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="secondary" id="addIncomeRowBtn" data-i18n="table.addRow"></button>
+      <button id="downloadIncomeBtn2" data-i18n="table.downloadCsv"></button>
+    </div>
+    <div class="table-wrap">
+      <table id="incomeTable">
+        <thead>
+          <tr>
+            <th data-i18n="col.date" data-sort-key="date"></th><th data-i18n="col.description"></th><th data-i18n="col.bankCategory"></th><th data-i18n="col.value" data-sort-key="value"></th><th data-i18n="col.type" data-sort-key="type"></th><th data-i18n="col.incomeType" data-sort-key="income_type"></th><th></th>
+          </tr>
+        </thead>
+        <tbody id="incomeBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- OUTCOME -->
+<div class="panel" id="panel-outcome">
+  <div class="card">
+    <h2 data-i18n="tab.outcome"></h2>
+    <div class="table-total-line" id="outcomeTotalLine"></div>
+    <p class="small" data-i18n="outcome.valueHint"></p>
+    <div class="row" style="margin-bottom:10px;">
+      <button class="secondary" id="addOutcomeRowBtn" data-i18n="table.addRow"></button>
+      <button id="downloadOutcomeBtn2" data-i18n="table.downloadCsv"></button>
+    </div>
+    <div class="table-wrap">
+      <table id="outcomeTable">
+        <thead>
+          <tr>
+            <th data-i18n="col.date" data-sort-key="date"></th><th data-i18n="col.description"></th><th data-i18n="col.bankCategory"></th><th data-i18n="col.value" data-sort-key="value"></th><th data-i18n="col.type" data-sort-key="type"></th><th data-i18n="col.jar" data-sort-key="jar"></th><th></th>
+          </tr>
+        </thead>
+        <tbody id="outcomeBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MANUAL -->
+<div class="panel" id="panel-manual">
+  <div class="card">
+    <div class="manual-lang-tabs">
+      <button class="manual-lang-tab active" data-lang="en">English</button>
+      <button class="manual-lang-tab" data-lang="pl">Polski</button>
+    </div>
+
+    <div class="manual-content active" id="manual-en">
+      <h3>Where this system comes from</h3>
+      <p>The 6 Jars method (also called the JARS system) was popularized by <b>T. Harv Eker</b> in his 2005 bestselling book <b><i>Secrets of the Millionaire Mind: Mastering the Inner Game of Wealth</i></b>. Eker, a Canadian businessman and motivational speaker, built the book around the idea that people's ingrained beliefs about money &mdash; their "money blueprint" &mdash; determine their financial results more than their income does. The 6 Jars technique is the practical, mechanical piece of that philosophy: a simple percentage-based system for allocating every dollar (or z&#322;oty) of income the moment it arrives, so that spending, saving and giving all happen automatically and proportionally rather than by accident at the end of the month.</p>
+      <blockquote>"It's not about how much money you make, it's about how much money you keep, and how hard that money works for you."<br>&mdash; T. Harv Eker, Secrets of the Millionaire Mind</blockquote>
+      <p>Historically the "jars" were meant literally &mdash; physical jars or envelopes you'd put cash into. This app keeps the spirit of that idea (six clearly separated buckets with fixed target percentages) but replaces the envelopes with a digital ledger you can reconcile against your actual bank statements.</p>
+      <p>If you want to go deeper into this method and T. Harv Eker's wider work, visit <a href="https://www.harveker.com/blog/" target="_blank" rel="noopener">harveker.com/blog</a> &mdash; the original source of inspiration for this project.</p>
+
+      <h3>What is this?</h3>
+      <p>Lechuteq Budget is a local, single-file budgeting tool based on T. Harv Eker's 6 Jars money management system. It runs entirely in your browser &mdash; no install, no account, no server. Your data lives only in this browser tab and in the CSV files you download; nothing is sent anywhere.</p>
+
+      <h3>The 6 Jars</h3>
+      <ul>
+        <li><b>NEC &ndash; Necessities (goal 55%)</b>: rent/mortgage, groceries, utilities, insurance, transport.</li>
+        <li><b>FFA &ndash; Financial Freedom Account (goal 10%)</b>: invested for long-term wealth. Never spent.</li>
+        <li><b>LTSS &ndash; Long-Term Savings for Spending (goal 10%)</b>: big irregular purchases, emergencies, vacations, car, repairs.</li>
+        <li><b>EDU &ndash; Education (goal 10%)</b>: books, courses, coaching &mdash; growing your skills and income.</li>
+        <li><b>PLAY &ndash; Play (goal 10%)</b>: guilt-free spending, treats, experiences.</li>
+        <li><b>GIVE &ndash; Give (goal 5%)</b>: donations, gifts, helping others.</li>
+      </ul>
+      <p>Each jar's <b>current %</b> is calculated as: (sum of that jar's Outcome rows for the selected month) &divide; (sum of all Income rows for that month).</p>
+
+      <h3>How the color coding works</h3>
+      <p>NEC is a spending <i>cap</i>: it is <span style="color:var(--good);font-weight:600;">green</span> while you're at or under 55%, and turns <span style="color:var(--bad);font-weight:600;">red</span> if you overspend past it. The other five jars (FFA, LTSS, EDU, PLAY, GIVE) work the opposite way &mdash; they are savings/allocation <i>targets</i>, so they stay <span style="color:var(--bad);font-weight:600;">red</span> until you've allocated at least your goal percentage, then turn <span style="color:var(--good);font-weight:600;">green</span> once you've hit or passed it.</p>
+
+      <p>Each jar card also has a small jar icon in its top-right corner labeled with the jar's shortcut (NEC, FFA, LTSS, EDU, PLAY, GIVE) &mdash; purely visual, to make the six jars easier to tell apart at a glance.</p>
+
+      <h3>Money Jars header: totals and jar completeness</h3>
+      <p>The top-right corner of the Money Jars section shows two neutral, informational lines: the month's <b>income</b> on the first line and the total <b>spent</b> on the line below it. These are pure information &mdash; they carry no green/red judgement. The same running totals appear at the top of the <b>Income</b> and <b>Outcome</b> tabs, summing every row currently loaded so you can quickly verify an import came in complete.</p>
+      <p>Next to those totals sits the <b>jar completeness</b> indicator: it is <span style="color:var(--bad);font-weight:600;">red</span> whenever any Outcome row in the selected month still has no jar assigned (showing how many rows are missing one), and turns <span style="color:var(--good);font-weight:600;">green</span> ("Jars filled") once every expense has its jar. Until it's green, the jar percentages below are incomplete &mdash; unassigned spending simply isn't counted in any jar.</p>
+
+      <h3>Step by step: importing mBank transactions</h3>
+      <ol>
+        <li>Open the <b>Import/Export</b> tab.</li>
+        <li>(Optional) Load previously saved CSV files for the month you're working on, so new data is added on top of existing rows.</li>
+        <li>In mBank's web view, select and copy the transaction history text. Both formats are recognized automatically: the expanded <b>detail view</b> (raw block text with "Kategoria:", "Kwota:" lines) and the compact <b>transaction list</b> (each row showing a date like "21.07.2026", a description, "możliwa zmiana kategorii", and an amount like "-89,98 PLN").</li>
+        <li>Paste it into the yellow box and click <b>Import pasted text</b>.</li>
+        <li>Rows with a negative amount go to the <b>Outcome</b> table; positive amounts go to <b>Income</b>. Dates are read from the pasted text; if none are found, today's date is used.</li>
+      </ol>
+
+      <h3>Filling in the details</h3>
+      <p>The parser can only extract what mBank gives it (description, category, amount). Any bank category it finds lands in the <b>Additional info</b> column, which is otherwise yours for free-text notes. You fill in the rest by hand on the Income/Outcome tabs:</p>
+      <ul>
+        <li><b>Type</b> (both tables): <code>account</code>, <code>credit_card</code>, or <code>cash</code> &mdash; which payment method this transaction used. Imported rows default to <code>account</code> (the most common case), so you only change the exceptions.</li>
+        <li><b>Income type</b> (Income table only): <code>salary</code>, <code>selling</code>, <code>additional</code>, <code>returns</code>, <code>passive</code>, or <code>other</code>.</li>
+        <li><b>Jar</b> (Outcome table only): which of the 6 jars this expense belongs to. This is what drives the dashboard. Imported expenses default to <code>NEC</code> (Necessities, the biggest jar) &mdash; review each row and reassign the ones that belong elsewhere.</li>
+      </ul>
+
+      <h3>Available balances</h3>
+      <p>On the Dashboard, each of the three balance cards (Cash, Account, Credit card) shows a running total: the <b>starting balance</b> you set once (defaults to 0, editable any time) plus all Income minus all Outcome rows tagged with that Type, across your entire history &mdash; not just the selected month. Use the starting balance field to align the tool with your real-world balance the first time you use it, or reset it to zero at any point you want to restart tracking from scratch.</p>
+      <p>Each balance card also shows a small badge in its top-right corner with that bucket's <b>net change for the selected month</b> (green if positive, red if negative), and the big number at the top of the section &mdash; <b>Total this month (Income &minus; Outcome, all types)</b> &mdash; shows your overall net result for the month across Cash, Account and Credit card combined, colored the same way.</p>
+
+      <h3>Opening balances in your CSV files</h3>
+      <p>When you download a CSV, the app quietly adds a first row carrying that month's starting balance for each payment type that has a non-zero value (labelled <code>STARTING BALANCE</code>, dated the 1st of the month). This row is not shown in the Income/Outcome tables &mdash; it exists purely so that when you reload an old month's CSV later to check a historical statement, your starting balances for that period are restored automatically instead of you having to re-enter them by hand.</p>
+
+      <h3>Recommended: keeping balances in sync with your real bank account</h3>
+      <p>The starting balance for each bucket lives in your browser and is shared across whatever month you're currently viewing &mdash; it isn't automatically split or carried forward per month unless a loaded CSV's own <code>STARTING BALANCE</code> row overrides it. Chaining many months together without ever double-checking against reality means a single missed cash purchase or a misread pasted transaction quietly compounds into every later month's opening balance.</p>
+      <p>The practical fix: at the start of each month you begin tracking, open your bank's app, check the actual Cash, Account, and Credit card balances, and type those real numbers straight into the three <b>Starting balance</b> fields on the Dashboard before entering that month's transactions. This anchors the month to ground truth once; any small tracking gaps during the month then stay contained to that month instead of drifting forward. Do this again at the start of the next month rather than relying on the previous month's calculated ending balance &mdash; a monthly reset is far more forgiving of the odd missed row than an unbroken multi-month chain.</p>
+      <p>This is easy in practice: the Starting balance fields are plain number inputs, update the whole Dashboard instantly, and get saved automatically (both to your browser and into the CSV's <code>STARTING BALANCE</code> row on Save/Download) so you don't need to re-enter them every time you reopen the same month's file &mdash; just re-check and adjust them against your real bank balance whenever you move on to a new month.</p>
+
+      <h3>Moving money between wallets (e.g. paying off a credit card)</h3>
+      <p>To pay off a credit card from your account, add an Outcome row with a negative amount and set its Type to <b>internal</b>. This still moves real money: your Account balance goes down by that amount, and your Credit card balance is credited by the same amount (reducing what you owe) &mdash; but the row is excluded from the Income/Outcome totals and doesn't need a jar, since it's a transfer between your own wallets, not real spending.</p>
+
+      <h3>Display currency</h3>
+      <p>The dropdown above Available balances lets you switch the currency symbol shown next to amounts on the Dashboard between PLN, EUR and USD. This only relabels the numbers &mdash; no conversion or recalculation happens, the figure stays exactly the same regardless of which currency is selected. Every number is always stored and exported in PLN, so switching currency never changes your underlying data.</p>
+
+      <h3>Dark mode and language</h3>
+      <p>The two switches in the top-right corner of every tab let you toggle between light and dark appearance, and between English and Polish for the entire interface (tabs, buttons, table headers, status messages). Both preferences are remembered in your browser for next time.</p>
+
+      <h3>Historical, current and prediction months</h3>
+      <p>Next to the Month picker on the Dashboard, a small badge tells you how the selected month relates to today: <b>Historical data</b> (a month before the current one &mdash; you're looking at a closed, past period), <b>Current month</b> (the month you're actively tracking right now), or <b>Prediction</b> (a month that hasn't happened yet &mdash; anything you enter there is a forecast, not an actual record). This is purely informational and doesn't change how any numbers are calculated; it's there so you never mistake a forward-looking projection for a real result, or forget you're reviewing an old month.</p>
+
+      <h3>Saving your work</h3>
+      <p>Nothing is auto-saved to disk. The <b>Save CSV</b> button next to the Month picker on the Dashboard turns red the moment you edit, add, delete, or import any Income/Outcome row, and saves both <code>YYYYMM_income.csv</code> and <code>YYYYMM_outcome.csv</code> when clicked (<code>YYYYMM</code> is always the year and month currently selected in the Month picker). On Chrome/Edge it opens a real "Save As" dialog for each file so you choose the folder; on browsers without that support it falls back to a normal download. Once both files are saved, the button turns green again. The separate <b>Download CSV</b> buttons on the Import/Export and Income/Outcome tabs still work the same way as before, for a quick one-off download without the dialog. Keep your saved files somewhere safe (e.g. a synced folder); reload them next time via the file pickers on the Import/Export tab to continue where you left off.</p>
+
+      <h3>Outcome values must be negative</h3>
+      <p>Every row on the Outcome tab represents money leaving a bucket, so its Value must be negative &mdash; e.g. <code>-120.50</code>, not <code>120.50</code>. When you click <b>+ Add row</b>, the new row's Value field is pre-filled with just a <code>-</code> so you can type the number straight after it. If a Value ever ends up positive (for example after a paste or manual edit), that field turns red with a warning tooltip until you fix the sign.</p>
+
+      <h3>Which month did I just import?</h3>
+      <p>Every time you load a CSV file on the Import/Export tab, the status message underneath the file pickers now tells you which month the loaded data actually belongs to (e.g. "Data month: 2026-06"), based on the dates found inside the rows &mdash; not on the filename. If that imported month is different from whatever month is currently selected in the Dashboard's Month picker, a red warning banner appears right under the picker explaining the mismatch, so you're never confused about why the numbers on screen don't seem to match the file you just loaded. Switch the Month picker to the imported month (or re-import the right file for the month you're viewing) to clear the warning.</p>
+
+      <h3>Tips</h3>
+      <ul>
+        <li>Editing any cell in a table updates instantly &mdash; press Tab or click away to commit the change.</li>
+        <li>Use the &times; button at the end of a row to delete it.</li>
+        <li>Switch the Month picker on the Dashboard to review any past month once you've loaded its CSVs; balance cards, jars and both monthly totals all update together.</li>
+        <li>If re-importing the exact same CSV file doesn't seem to load, this has been fixed &mdash; the file picker now always re-reads the file even if you pick the same one twice.</li>
+      </ul>
+
+      <h3>Found an issue?</h3>
+      <p>Lechuteq Budget is free and open source: <a href="https://github.com/Lechuteq/budget6jars" target="_blank" rel="noopener">github.com/Lechuteq/budget6jars</a>. If you run into a bug or have an idea for an improvement, please open an issue on that GitHub repository so it can be tracked and fixed.</p>
+    </div>
+
+    <div class="manual-content" id="manual-pl">
+      <h3>Sk&#261;d si&#281; wzi&#261;&#322; ten system</h3>
+      <p>Metoda 6 S&#322;oik&oacute;w (znana te&#380; jako system JARS) zosta&#322;a spopularyzowana przez <b>T. Harv Ekera</b> w jego bestsellerowej ksi&#261;&#380;ce z 2005 roku <b><i>Bogaty ojciec, biedny umys&#322;? Kod pieni&#281;dzy</i></b> (ang. <i>Secrets of the Millionaire Mind: Mastering the Inner Game of Wealth</i>). Eker, kanadyjski biznesmen i mówca motywacyjny, oparł książkę na idei, że utrwalone przekonania ludzi na temat pieni&#281;dzy &ndash; ich "finansowy plan wewn&#281;trzny" &ndash; decyduj&#261; o wynikach finansowych bardziej ni&#380; sam doch&oacute;d. System 6 S&#322;oik&oacute;w to praktyczna, mechaniczna cz&#281;&#347;&#263; tej filozofii: prosty, procentowy system rozdzielania ka&#380;dej z&#322;ot&oacute;wki doch&oacute;du w momencie jej otrzymania, tak aby wydawanie, oszcz&#281;dzanie i dawanie odbywa&#322;y si&#281; automatycznie i proporcjonalnie, a nie przypadkowo pod koniec miesi&#261;ca.</p>
+      <blockquote>"Nie chodzi o to, ile pieni&#281;dzy zarabiasz, tylko ile z nich zatrzymujesz i jak ci&#281;&#380;ko te pieni&#261;dze dla Ciebie pracuj&#261;."<br>&mdash; T. Harv Eker, Sekrety umys&#322;u milionera</blockquote>
+      <p>Historycznie "s&#322;oiki" mia&#322;y by&#263; dos&#322;owne &ndash; fizyczne s&#322;oiki lub koperty, do kt&oacute;rych wk&#322;ada&#322;o si&#281; got&oacute;wk&#281;. Ta aplikacja zachowuje ducha tej idei (sze&#347;&#263; wyra&#378;nie oddzielonych koszyk&oacute;w ze sta&#322;ymi docelowymi procentami), ale zast&#281;puje koperty cyfrowym rejestrem, kt&oacute;ry mo&#380;esz uzgadnia&#263; z rzeczywistymi wyci&#261;gami bankowymi.</p>
+      <p>Je&#347;li chcesz zg&#322;&#281;bi&#263; t&#281; metod&#281; i szersz&#261; tw&oacute;rczo&#347;&#263; T. Harv Ekera, odwied&#378; <a href="https://www.harveker.com/blog/" target="_blank" rel="noopener">harveker.com/blog</a> &ndash; oryginalne &#378;r&oacute;d&#322;o inspiracji dla tego projektu.</p>
+
+      <h3>Czym jest ta aplikacja?</h3>
+      <p>Lechuteq Budget to lokalne, jednoplikowe narz&#281;dzie do bud&#380;etowania oparte na systemie 6 S&#322;oik&oacute;w T. Harv Ekera. Dzia&#322;a wy&#322;&#261;cznie w Twojej przegl&#261;darce &ndash; bez instalacji, bez konta, bez serwera. Dane pozostaj&#261; tylko w tej karcie przegl&#261;darki oraz w plikach CSV, kt&oacute;re pobierzesz; nic nie jest nigdzie wysy&#322;ane.</p>
+
+      <h3>6 S&#322;oik&oacute;w</h3>
+      <ul>
+        <li><b>NEC &ndash; Potrzeby (cel 55%)</b>: czynsz/kredyt, zakupy, media, ubezpieczenia, transport.</li>
+        <li><b>FFA &ndash; Konto Wolno&#347;ci Finansowej (cel 10%)</b>: inwestowane na d&#322;ugoterminowy maj&#261;tek. Nigdy nie wydawane.</li>
+        <li><b>LTSS &ndash; D&#322;ugoterminowe Oszcz&#281;dno&#347;ci na Wydatki (cel 10%)</b>: du&#380;e nieregularne zakupy, nag&#322;e wydatki, wakacje, samoch&oacute;d, naprawy.</li>
+        <li><b>EDU &ndash; Edukacja (cel 10%)</b>: ksi&#261;&#380;ki, kursy, coaching &ndash; rozw&oacute;j umiej&#281;tno&#347;ci i doch&oacute;d&oacute;w.</li>
+        <li><b>PLAY &ndash; Przyjemno&#347;ci (cel 10%)</b>: wydatki bez wyrzut&oacute;w sumienia, nagrody, prze&#380;ycia.</li>
+        <li><b>GIVE &ndash; Dawanie (cel 5%)</b>: darowizny, prezenty, pomoc innym.</li>
+      </ul>
+      <p><b>Aktualny procent</b> ka&#380;dego s&#322;oika liczony jest jako: (suma wierszy Rozch&oacute;d przypisanych do tego s&#322;oika w wybranym miesi&#261;cu) &divide; (suma wszystkich wierszy Przych&oacute;d w tym miesi&#261;cu).</p>
+
+      <h3>Jak dzia&#322;a kolorowanie pask&oacute;w</h3>
+      <p>NEC to <i>limit</i> wydatk&oacute;w: jest <span style="color:var(--good);font-weight:600;">zielony</span>, dop&oacute;ki jeste&#347; na poziomie 55% lub poni&#380;ej, i zmienia si&#281; na <span style="color:var(--bad);font-weight:600;">czerwony</span>, je&#347;li go przekroczysz. Pozosta&#322;e pi&#281;&#263; s&#322;oik&oacute;w (FFA, LTSS, EDU, PLAY, GIVE) dzia&#322;a odwrotnie &ndash; to cele oszcz&#281;dno&#347;ciowe/alokacyjne, wi&#281;c pozostaj&#261; <span style="color:var(--bad);font-weight:600;">czerwone</span>, dop&oacute;ki nie przeznaczysz na nie co najmniej za&#322;o&#380;onego procentu, a nast&#281;pnie zmieniaj&#261; si&#281; na <span style="color:var(--good);font-weight:600;">zielone</span>, gdy tylko go osi&#261;gniesz lub przekroczysz.</p>
+
+      <p>Ka&#380;da karta s&#322;oika ma te&#380; ma&#322;&#261; ikon&#281; s&#322;oika w prawym g&oacute;rnym rogu, oznaczon&#261; skr&oacute;tem s&#322;oika (NEC, FFA, LTSS, EDU, PLAY, GIVE) &ndash; czysto wizualne, aby &#322;atwiej odr&oacute;&#380;ni&#263; sze&#347;&#263; s&#322;oik&oacute;w na pierwszy rzut oka.</p>
+
+      <h3>Nag&#322;&oacute;wek S&#322;oik&oacute;w: sumy i kompletno&#347;&#263; s&#322;oik&oacute;w</h3>
+      <p>W prawym g&oacute;rnym rogu sekcji S&#322;oik&oacute;w widoczne s&#261; dwie neutralne linie informacyjne: <b>przych&oacute;d</b> miesi&#261;ca w pierwszej linii i suma <b>wydatk&oacute;w</b> w linii poni&#380;ej. To czysta informacja &ndash; bez oceny zielony/czerwony. Te same sumy pojawiaj&#261; si&#281; na g&oacute;rze zak&#322;adek <b>Przych&oacute;d</b> i <b>Rozch&oacute;d</b>, sumuj&#261;c wszystkie aktualnie wczytane wiersze, dzi&#281;ki czemu szybko sprawdzisz, czy import wszed&#322; w ca&#322;o&#347;ci.</p>
+      <p>Obok tych sum znajduje si&#281; wska&#378;nik <b>kompletno&#347;ci s&#322;oik&oacute;w</b>: jest <span style="color:var(--bad);font-weight:600;">czerwony</span>, gdy kt&oacute;rykolwiek wiersz Rozchodu w wybranym miesi&#261;cu nie ma jeszcze przypisanego s&#322;oika (z liczb&#261; brakuj&#261;cych wierszy), i zmienia si&#281; na <span style="color:var(--good);font-weight:600;">zielony</span> ("S&#322;oiki uzupe&#322;nione"), gdy ka&#380;dy wydatek ma sw&oacute;j s&#322;oik. Dop&oacute;ki nie jest zielony, procenty s&#322;oik&oacute;w poni&#380;ej s&#261; niekompletne &ndash; nieprzypisane wydatki po prostu nie liczą si&#281; do &#380;adnego s&#322;oika.</p>
+
+      <h3>Krok po kroku: import transakcji z mBanku</h3>
+      <ol>
+        <li>Otw&oacute;rz zak&#322;adk&#281; <b>Import/Export</b>.</li>
+        <li>(Opcjonalnie) Wczytaj wcze&#347;niej zapisane pliki CSV dla miesi&#261;ca, nad kt&oacute;rym pracujesz, aby nowe dane dosz&#322;y do istniej&#261;cych wierszy.</li>
+        <li>W widoku internetowym mBanku zaznacz i skopiuj tekst historii transakcji. Oba formaty s&#261; rozpoznawane automatycznie: rozwini&#281;ty <b>widok szczeg&oacute;&#322;&oacute;w</b> (surowy blok z liniami "Kategoria:", "Kwota:") oraz zwyk&#322;a <b>lista transakcji</b> (ka&#380;dy wiersz z dat&#261; typu "21.07.2026", opisem, "mo&#380;liwa zmiana kategorii" i kwot&#261; typu "-89,98 PLN").</li>
+        <li>Wklej go do &#380;&oacute;&#322;tego pola i kliknij <b>Import pasted text</b>.</li>
+        <li>Wiersze z ujemn&#261; kwot&#261; trafiaj&#261; do tabeli <b>Outcome</b> (Rozch&oacute;d); dodatnie do <b>Income</b> (Przych&oacute;d). Daty s&#261; odczytywane z wklejonego tekstu; je&#347;li ich brak, u&#380;ywana jest dzisiejsza data.</li>
+      </ol>
+
+      <h3>Uzupe&#322;nianie szczeg&oacute;&#322;&oacute;w</h3>
+      <p>Parser mo&#380;e wyci&#261;gn&#261;&#263; tylko to, co daje mu mBank (opis, kategoria, kwota). Znaleziona kategoria bankowa trafia do kolumny <b>Dodatkowe informacje</b>, kt&oacute;ra poza tym s&#322;u&#380;y na Twoje w&#322;asne notatki. Reszt&#281; uzupe&#322;niasz r&#281;cznie w zak&#322;adkach Income/Outcome:</p>
+      <ul>
+        <li><b>Type</b> (obie tabele): <code>account</code> (konto), <code>credit_card</code> (karta kredytowa) lub <code>cash</code> (got&oacute;wka) &ndash; jak&#261; metod&#261; p&#322;atno&#347;ci wykonano transakcj&#281;. Zaimportowane wiersze domy&#347;lnie dostaj&#261; <code>account</code> (najcz&#281;stszy przypadek), wi&#281;c zmieniasz tylko wyj&#261;tki.</li>
+        <li><b>Income type</b> (tylko tabela Income): <code>salary</code> (pensja), <code>selling</code> (sprzeda&#380;), <code>additional</code> (dodatkowe), <code>returns</code> (zwroty), <code>passive</code> (pasywne) lub <code>other</code> (inne).</li>
+        <li><b>Jar</b> (tylko tabela Outcome): do kt&oacute;rego z 6 s&#322;oik&oacute;w nale&#380;y ten wydatek. To w&#322;a&#347;nie steruje dashboardem. Zaimportowane wydatki domy&#347;lnie dostaj&#261; <code>NEC</code> (Potrzeby, najwi&#281;kszy s&#322;oik) &ndash; przejrzyj wiersze i przepisz te, kt&oacute;re nale&#380;&#261; gdzie indziej.</li>
+      </ul>
+
+      <h3>Dost&#281;pne salda</h3>
+      <p>Na Dashboardzie ka&#380;da z trzech kart salda (Got&oacute;wka, Konto, Karta kredytowa) pokazuje bie&#380;&#261;c&#261; sum&#281;: <b>saldo pocz&#261;tkowe</b>, kt&oacute;re ustawiasz raz (domy&#347;lnie 0, edytowalne w dowolnym momencie), plus wszystkie wiersze Income minus wszystkie wiersze Outcome oznaczone tym Type, z ca&#322;ej historii &ndash; nie tylko z wybranego miesi&#261;ca. U&#380;yj pola salda pocz&#261;tkowego, aby dopasowa&#263; narz&#281;dzie do rzeczywistego salda przy pierwszym u&#380;yciu, albo wyzeruj je w dowolnym momencie, aby zacz&#261;&#263; &#347;ledzenie od nowa.</p>
+      <p>Ka&#380;da karta salda pokazuje r&oacute;wnie&#380; ma&#322;y znacznik w prawym g&oacute;rnym rogu z <b>zmian&#261; netto dla wybranego miesi&#261;ca</b> (zielony, je&#347;li dodatnia, czerwony, je&#347;li ujemna), a du&#380;a liczba na g&oacute;rze sekcji &ndash; <b>Total this month (Income &minus; Outcome, all types)</b> &ndash; pokazuje &#322;&#261;czny wynik netto za miesi&#261;c dla Got&oacute;wki, Konta i Karty kredytowej razem, kolorowany w ten sam spos&oacute;b.</p>
+
+      <h3>Salda pocz&#261;tkowe w plikach CSV</h3>
+      <p>Podczas pobierania pliku CSV aplikacja po cichu dodaje pierwszy wiersz zawieraj&#261;cy saldo pocz&#261;tkowe danego miesi&#261;ca dla ka&#380;dego typu p&#322;atno&#347;ci o niezerowej warto&#347;ci (oznaczony jako <code>STARTING BALANCE</code>, z dat&#261; pierwszego dnia miesi&#261;ca). Ten wiersz nie jest widoczny w tabelach Income/Outcome &ndash; istnieje wy&#322;&#261;cznie po to, aby przy ponownym wczytaniu starego pliku CSV w celu sprawdzenia historycznego wyci&#261;gu, salda pocz&#261;tkowe z tego okresu zosta&#322;y przywr&oacute;cone automatycznie, zamiast wpisywa&#263; je r&#281;cznie.</p>
+
+      <h3>Zalecane: synchronizacja sald z prawdziwym kontem bankowym</h3>
+      <p>Saldo pocz&#261;tkowe dla ka&#380;dego portfela &#380;yje w Twojej przegl&#261;darce i jest wsp&oacute;lne dla ka&#380;dego przegl&#261;danego miesi&#261;ca &ndash; nie jest automatycznie dzielone ani przenoszone z miesi&#261;ca na miesi&#261;c, chyba &#380;e w&#322;asny wiersz <code>STARTING BALANCE</code> wczytanego pliku CSV je nadpisze. &#321;&#261;czenie wielu miesi&#281;cy bez sprawdzania ich wzgl&#281;dem rzeczywisto&#347;ci oznacza, &#380;e jeden pomini&#281;ty zakup got&oacute;wkowy albo &#378;le odczytana wklejona transakcja po cichu nawarstwia si&#281; w saldzie pocz&#261;tkowym ka&#380;dego kolejnego miesi&#261;ca.</p>
+      <p>Praktyczne rozwi&#261;zanie: na pocz&#261;tku ka&#380;dego miesi&#261;ca, kt&oacute;ry zaczynasz &#347;ledzi&#263;, otw&oacute;rz aplikacj&#281; swojego banku, sprawd&#378; rzeczywiste salda Got&oacute;wki, Konta i Karty kredytowej, i wpisz te prawdziwe liczby bezpo&#347;rednio w trzech polach <b>Saldo pocz&#261;tkowe</b> na Dashboardzie, zanim wprowadzisz transakcje z tego miesi&#261;ca. To zakotwicza miesi&#261;c w rzeczywisto&#347;ci raz na pocz&#261;tku; ewentualne drobne luki w &#347;ledzeniu w trakcie miesi&#261;ca pozostaj&#261; wtedy ograniczone do tego miesi&#261;ca, zamiast si&#281; przenosi&#263; dalej. Zr&oacute;b to samo na pocz&#261;tku kolejnego miesi&#261;ca, zamiast polega&#263; na obliczonym saldzie ko&#324;cowym z poprzedniego &ndash; comiesi&#281;czny reset jest znacznie bardziej wybaczaj&#261;cy dla przypadkowo pomini&#281;tego wiersza ni&#380; nieprzerwany &#322;a&#324;cuch wielu miesi&#281;cy.</p>
+      <p>W praktyce jest to proste: pola Saldo pocz&#261;tkowe to zwyk&#322;e pola liczbowe, aktualizuj&#261; ca&#322;y Dashboard natychmiast i zapisuj&#261; si&#281; automatycznie (zar&oacute;wno w przegl&#261;darce, jak i w wierszu <code>STARTING BALANCE</code> pliku CSV przy zapisie/pobraniu), wi&#281;c nie trzeba ich wpisywa&#263; ponownie za ka&#380;dym razem, gdy otwierasz ten sam plik danego miesi&#261;ca &ndash; wystarczy sprawdzi&#263; je i skorygowa&#263; wzgl&#281;dem prawdziwego salda bankowego przy przej&#347;ciu do nowego miesi&#261;ca.</p>
+
+      <h3>Przenoszenie pieni&#281;dzy mi&#281;dzy portfelami (np. sp&#322;ata karty kredytowej)</h3>
+      <p>Aby sp&#322;aci&#263; kart&#281; kredytow&#261; z konta, dodaj wiersz Outcome z ujemn&#261; kwot&#261; i ustaw jego Type na <b>internal</b>. To nadal przesuwa prawdziwe pieni&#261;dze: saldo Konta zmniejsza si&#281; o t&#281; kwot&#281;, a saldo Karty kredytowej zostaje uznane o t&#281; sam&#261; kwot&#281; (zmniejszaj&#261;c zad&#322;u&#380;enie) &ndash; ale wiersz jest wykluczony z sum Income/Outcome i nie wymaga s&#322;oika, poniewa&#380; to transfer mi&#281;dzy Twoimi w&#322;asnymi portfelami, a nie prawdziwy wydatek.</p>
+
+      <h3>Waluta wy&#347;wietlania</h3>
+      <p>Lista rozwijana nad Available balances pozwala prze&#322;&#261;czy&#263; symbol waluty pokazywany przy kwotach na Dashboardzie mi&#281;dzy PLN, EUR i USD. To tylko zmiana etykiety &ndash; nie zachodzi &#380;adne przeliczenie ani przekszta&#322;cenie, liczba pozostaje dok&#322;adnie taka sama niezale&#380;nie od wybranej waluty. Ka&#380;da liczba jest zawsze przechowywana i eksportowana w PLN, wi&#281;c zmiana waluty nigdy nie zmienia Twoich rzeczywistych danych.</p>
+
+      <h3>Tryb ciemny i j&#281;zyk</h3>
+      <p>Dwa prze&#322;&#261;czniki w prawym g&oacute;rnym rogu ka&#380;dej zak&#322;adki pozwalaj&#261; prze&#322;&#261;cza&#263; si&#281; mi&#281;dzy jasnym i ciemnym wygl&#261;dem oraz mi&#281;dzy j&#281;zykiem angielskim i polskim dla ca&#322;ego interfejsu (zak&#322;adki, przyciski, nag&#322;&oacute;wki tabel, komunikaty statusu). Obie preferencje s&#261; zapami&#281;tywane w przegl&#261;darce na nast&#281;pny raz.</p>
+
+      <h3>Miesi&#261;ce historyczne, bie&#380;&#261;cy i prognoza</h3>
+      <p>Obok selektora miesi&#261;ca na Dashboardzie znajduje si&#281; ma&#322;y znacznik, kt&oacute;ry pokazuje, jak wybrany miesi&#261;c odnosi si&#281; do dzisiejszej daty: <b>Dane historyczne</b> (miesi&#261;c wcze&#347;niejszy ni&#380; bie&#380;&#261;cy &ndash; patrzysz na zamkni&#281;ty, miniony okres), <b>Bie&#380;&#261;cy miesi&#261;c</b> (miesi&#261;c, kt&oacute;ry aktywnie &#347;ledzisz w tej chwili) lub <b>Prognoza</b> (miesi&#261;c, kt&oacute;ry jeszcze nie nast&#261;pi&#322; &ndash; wszystko, co tam wpiszesz, jest prognoz&#261;, a nie rzeczywistym zapisem). To wy&#322;&#261;cznie informacyjne i nie zmienia sposobu liczenia &#380;adnych warto&#347;ci; ma za zadanie sprawi&#263;, by&#347; nigdy nie pomyli&#322; prognozy na przysz&#322;o&#347;&#263; z rzeczywistym wynikiem ani nie zapomnia&#322;, &#380;e przegl&#261;dasz stary miesi&#261;c.</p>
+
+      <h3>Zapisywanie pracy</h3>
+      <p>Nic nie jest automatycznie zapisywane na dysku. Przycisk <b>Save CSV</b> obok selektora miesi&#261;ca na Dashboardzie zmienia si&#281; na czerwony, gdy tylko edytujesz, dodasz, usuniesz lub zaimportujesz jakikolwiek wiersz Income/Outcome, i zapisuje oba pliki <code>YYYYMM_income.csv</code> oraz <code>YYYYMM_outcome.csv</code> po klikni&#281;ciu (<code>YYYYMM</code> to zawsze rok i miesi&#261;c aktualnie wybrany w selektorze miesi&#261;ca). W Chrome/Edge otwiera prawdziwe okno "Zapisz jako" dla ka&#380;dego pliku, dzi&#281;ki czemu wybierasz folder; w przegl&#261;darkach bez tego wsparcia u&#380;ywa zwyk&#322;ego pobierania. Gdy oba pliki zostan&#261; zapisane, przycisk znowu robi si&#281; zielony. Osobne przyciski <b>Download CSV</b> w zak&#322;adkach Import/Export i Income/Outcome nadal dzia&#322;aj&#261; jak wcze&#347;niej, do szybkiego pojedynczego pobrania bez okna dialogowego. Przechowuj zapisane pliki w bezpiecznym miejscu (np. w synchronizowanym folderze); wczytaj je ponownie nast&#281;pnym razem przez selektory plik&oacute;w w zak&#322;adce Import/Export, aby kontynuowa&#263; prac&#281;.</p>
+
+      <h3>Wartości Rozchodu muszą być ujemne</h3>
+      <p>Ka&#380;dy wiersz w zak&#322;adce Rozch&oacute;d oznacza pieni&#261;dze wychodz&#261;ce z jakiego&#347; koszyka, wi&#281;c jego Kwota musi by&#263; ujemna &ndash; np. <code>-120.50</code>, nie <code>120.50</code>. Po klikni&#281;ciu <b>+ Dodaj wiersz</b>, pole Kwoty nowego wiersza jest wype&#322;nione samym znakiem <code>-</code>, wi&#281;c wystarczy dopisa&#263; liczb&#281; od razu po nim. Je&#347;li kwota kiedykolwiek okaże si&#281; dodatnia (np. po wklejeniu lub r&#281;cznej edycji), pole zmieni kolor na czerwony z podpowiedzi&#261; ostrzegawcz&#261;, dopóki nie poprawisz znaku.</p>
+
+      <h3>Kt&oacute;ry miesi&#261;c w&#322;a&#347;nie zaimportowa&#322;em?</h3>
+      <p>Przy ka&#380;dym wczytaniu pliku CSV w zak&#322;adce Import, komunikat statusu pod selektorami plik&oacute;w informuje teraz, do jakiego miesi&#261;ca faktycznie nale&#380;&#261; wczytane dane (np. "Miesi&#261;c danych: 2026-06"), na podstawie dat znajduj&#261;cych si&#281; w wierszach &ndash; a nie nazwy pliku. Jeśli ten zaimportowany miesi&#261;c r&oacute;&#380;ni si&#281; od miesi&#261;ca aktualnie wybranego w selektorze miesi&#261;ca na Dashboardzie, pod selektorem pojawi si&#281; czerwony baner ostrzegawczy wyja&#347;niaj&#261;cy t&#281; niezgodno&#347;&#263;, tak aby&#347; nigdy nie by&#322; zdezorientowany, dlaczego liczby na ekranie nie zgadzaj&#261; si&#281; z plikiem, kt&oacute;ry w&#322;a&#347;nie wczyta&#322;e&#347;. Prze&#322;&#261;cz selektor miesi&#261;ca na zaimportowany miesi&#261;c (albo ponownie zaimportuj odpowiedni plik dla przegl&#261;danego miesi&#261;ca), aby usun&#261;&#263; ostrzeżenie.</p>
+
+      <h3>Wskaz&oacute;wki</h3>
+      <ul>
+        <li>Edycja dowolnej kom&oacute;rki w tabeli aktualizuje si&#281; natychmiast &ndash; wci&#347;nij Tab lub kliknij poza pole, aby zatwierdzi&#263; zmian&#281;.</li>
+        <li>U&#380;yj przycisku &times; na ko&#324;cu wiersza, aby go usun&#261;&#263;.</li>
+        <li>Prze&#322;&#261;cz selektor miesi&#261;ca na Dashboardzie, aby przejrze&#263; dowolny wcze&#347;niejszy miesi&#261;c po wczytaniu jego plik&oacute;w CSV &ndash; karty sald, s&#322;oiki i oba miesi&#281;czne podsumowania aktualizuj&#261; si&#281; razem.</li>
+        <li>Je&#347;li ponowny import dok&#322;adnie tego samego pliku CSV wcze&#347;niej nie dzia&#322;a&#322;, zosta&#322;o to naprawione &ndash; selektor plik&oacute;w zawsze wczytuje plik na nowo, nawet je&#347;li wybierzesz ten sam dwa razy.</li>
+      </ul>
+
+      <h3>Znalaz&#322;e&#347; problem?</h3>
+      <p>Lechuteq Budget jest bezp&#322;atny i open source: <a href="https://github.com/Lechuteq/budget6jars" target="_blank" rel="noopener">github.com/Lechuteq/budget6jars</a>. Je&#347;li natrafisz na b&#322;&#261;d albo masz propozycj&#281; usprawnienia, zg&#322;o&#347; to jako issue w tym repozytorium na GitHubie, aby mo&#380;na by&#322;o to &#347;ledzi&#263; i naprawi&#263;.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+/* ===================== i18n ===================== */
+const I18N = {
+  en: {
+    subtitle: "Local, browser-only money jars budget — no install, no server, your CSVs stay on your machine.",
+    "tab.dashboard": "Dashboard",
+    "tab.import": "Import/Export",
+    "tab.income": "Income",
+    "tab.outcome": "Outcome",
+    "tab.manual": "Manual",
+    "dashboard.monthLabel": "Month",
+    "dashboard.balancesTitle": "Available balances",
+    "dashboard.currencyLabel": "Display currency",
+    "dashboard.balancesDesc": "Starting balance + Income − Outcome per payment type, always stored in PLN.",
+    "dashboard.totalMonthLabel": "Total this month (Income − Outcome):",
+    "dashboard.jarsTitle": "Money Jars",
+    "dashboard.jarsDesc": "Green = on track, red = needs attention. NEC is green while at or under its 55% cap; the other five jars are green once they reach their goal percentage.",
+    "dashboard.incomeThisMonth": "Income this month",
+    "dashboard.incomeHistorical": "Income passed month",
+    "dashboard.incomePrediction": "Predicted income, future month",
+    "dashboard.spent": "spent",
+    "dashboard.underGoal": "under goal",
+    "dashboard.overGoal": "over goal",
+    "dashboard.withinLimit": "Within limit",
+    "dashboard.overLimit": "Over limit",
+    "dashboard.goalReached": "Goal reached",
+    "dashboard.belowGoal": "Below goal",
+    "dashboard.goal": "Goal",
+    "dashboard.current": "Current",
+    "dashboard.startingBalance": "Starting balance",
+    "dashboard.setZero": "Set to 0",
+    "dashboard.cancel": "Cancel",
+    "dashboard.monthHistorical": "Historical data",
+    "dashboard.monthCurrent": "Current month",
+    "dashboard.monthPrediction": "Prediction",
+    "import.step1Title": "1. Load your monthly CSV files (optional)",
+    "import.step1Desc": "Pick previously saved YYYYMM_income.csv / YYYYMM_outcome.csv files to continue working on them. Skip this if starting fresh — new rows just get added to the in-memory tables below.",
+    "import.incomeCsvLabel": "Income CSV",
+    "import.outcomeCsvLabel": "Outcome CSV",
+    "import.step2Title": "2. Paste raw mBank text",
+    "import.step2Desc": "Copy transaction text straight from the mBank web view and paste below — both the expanded detail view (with \"Kategoria:\"/\"Kwota:\" lines) and the compact transaction list (date, description, amount per row) are recognized automatically. Amounts starting with \"-\" go to Outcome, positive go to Income. Dates are read from the pasted text (e.g. \"20 lipca 2026\" or \"20.07.2026\"); if none are found, today's date is used.",
+    "import.importBtn": "Import pasted text",
+    "import.clearBtn": "Clear",
+    "import.step3Title": "3. Save your work",
+    "import.step3Desc": "Download the current Income/Outcome tables as CSV files. Save them with the suggested filenames so you can reload the same month later.",
+    "import.downloadIncomeBtn": "Download Income CSV",
+    "import.downloadOutcomeBtn": "Download Outcome CSV",
+    "import.noText": "No text found. Paste mBank text first.",
+    "import.imported": "Imported {inc} income row(s), {out} outcome row(s).",
+    "import.loadedIncome": "Loaded {n} income rows from {file}{note}.",
+    "import.loadedOutcome": "Loaded {n} outcome rows from {file}{note}.",
+    "import.openingApplied": " ({n} opening balance row(s) applied)",
+    "import.importedMonth": " Data month: {month}.",
+    "dashboard.mismatchWarning": "⚠ Mismatch: you are viewing {viewMonth}, but the last imported CSV data is for {dataMonth}. Switch the month above to see it, or re-import the file for {viewMonth}.",
+    "table.addRow": "+ Add row",
+    "table.downloadCsv": "Download CSV",
+    "col.date": "Date",
+    "col.description": "Description",
+    "col.bankCategory": "Additional info",
+    "col.value": "Value (PLN)",
+    "outcome.valueHint": "Outcome amounts must be negative — enter them with a leading \"-\" (e.g. -120.50). New rows start with \"-\" pre-filled; just type the number after it.",
+    "dashboard.saveCsvUnsaved": "Save CSV (unsaved changes)",
+    "dashboard.saveCsvSaved": "Save CSV (saved)",
+    "dashboard.jarsUnmarked": "Jars missing: {n} outcome row(s) without a jar",
+    "dashboard.jarsFilled": "Jars filled — all outcome rows assigned",
+    "dashboard.allJarsGreen": "You are on the best way to Your Financial Freedom ;)",
+    "totals.income": "Income total: {amt}",
+    "totals.outcome": "Outcome total: {amt}",
+    "outcome.valueInvalidHint": "This value is positive. Outcome rows must be negative — add a leading \"-\".",
+    "col.type": "Type",
+    "col.incomeType": "Income type",
+    "col.jar": "Jar",
+    "type.internal": "internal",
+    "jar.intJar": "Internal (technical)",
+    "opt.none": "(none)",
+    "cashLabel": "Cash",
+    "accountLabel": "Account",
+    "creditCardLabel": "Credit card",
+  },
+  pl: {
+    subtitle: "Lokalny budżet słoików działający w przeglądarce — bez instalacji, bez serwera, Twoje pliki CSV zostają na Twoim komputerze.",
+    "tab.dashboard": "Dashboard",
+    "tab.import": "Import/Export",
+    "tab.income": "Przychód",
+    "tab.outcome": "Rozchód",
+    "tab.manual": "Instrukcja",
+    "dashboard.monthLabel": "Miesiąc",
+    "dashboard.balancesTitle": "Dostępne salda",
+    "dashboard.currencyLabel": "Waluta wyświetlania",
+    "dashboard.balancesDesc": "Saldo początkowe + Przychód − Rozchód wg typu płatności, zawsze w PLN.",
+    "dashboard.totalMonthLabel": "Suma za ten miesiąc (Przychód − Rozchód):",
+    "dashboard.jarsTitle": "Słoiki pieniężne",
+    "dashboard.jarsDesc": "Zielony = na dobrej drodze, czerwony = wymaga uwagi. NEC jest zielony, dopóki jest na poziomie 55% lub poniżej; pozostałe pięć słoików jest zielonych, gdy osiągną swój docelowy procent.",
+    "dashboard.incomeThisMonth": "Przychód w tym miesiącu",
+    "dashboard.incomeHistorical": "Przychód, miniony miesiąc",
+    "dashboard.incomePrediction": "Prognozowany przychód, przyszły miesiąc",
+    "dashboard.spent": "wydane",
+    "dashboard.underGoal": "poniżej celu",
+    "dashboard.overGoal": "powyżej celu",
+    "dashboard.withinLimit": "W granicach limitu",
+    "dashboard.overLimit": "Przekroczony limit",
+    "dashboard.goalReached": "Cel osiągnięty",
+    "dashboard.belowGoal": "Poniżej celu",
+    "dashboard.goal": "Cel",
+    "dashboard.current": "Aktualnie",
+    "dashboard.startingBalance": "Saldo początkowe",
+    "dashboard.setZero": "Wyzeruj",
+    "dashboard.cancel": "Anuluj",
+    "dashboard.monthHistorical": "Dane historyczne",
+    "dashboard.monthCurrent": "Bieżący miesiąc",
+    "dashboard.monthPrediction": "Prognoza",
+    "import.step1Title": "1. Wczytaj miesięczne pliki CSV (opcjonalnie)",
+    "import.step1Desc": "Wybierz wcześniej zapisane pliki YYYYMM_income.csv / YYYYMM_outcome.csv, aby kontynuować nad nimi pracę. Pomiń ten krok, jeśli zaczynasz od nowa — nowe wiersze zostaną po prostu dodane do tabel poniżej.",
+    "import.incomeCsvLabel": "CSV Przychód",
+    "import.outcomeCsvLabel": "CSV Rozchód",
+    "import.step2Title": "2. Wklej surowy tekst z mBanku",
+    "import.step2Desc": "Skopiuj tekst transakcji bezpośrednio z widoku internetowego mBanku i wklej poniżej — rozpoznawane są automatycznie oba formaty: rozwinięty widok szczegółów (z liniami „Kategoria:”/„Kwota:”) oraz zwykła lista transakcji (data, opis, kwota w wierszu). Kwoty zaczynające się od „-” trafiają do Rozchód, dodatnie do Przychód. Daty są odczytywane z wklejonego tekstu (np. „20 lipca 2026” lub „20.07.2026”); jeśli ich brak, używana jest dzisiejsza data.",
+    "import.importBtn": "Importuj wklejony tekst",
+    "import.clearBtn": "Wyczyść",
+    "import.step3Title": "3. Zapisz swoją pracę",
+    "import.step3Desc": "Pobierz bieżące tabele Przychód/Rozchód jako pliki CSV. Zapisuj je pod sugerowanymi nazwami, aby móc wczytać ten sam miesiąc później.",
+    "import.downloadIncomeBtn": "Pobierz CSV Przychód",
+    "import.downloadOutcomeBtn": "Pobierz CSV Rozchód",
+    "import.noText": "Nie znaleziono tekstu. Najpierw wklej tekst z mBanku.",
+    "import.imported": "Zaimportowano {inc} wiersz(y) Przychód, {out} wiersz(y) Rozchód.",
+    "import.loadedIncome": "Wczytano {n} wierszy Przychód z {file}{note}.",
+    "import.loadedOutcome": "Wczytano {n} wierszy Rozchód z {file}{note}.",
+    "import.openingApplied": " (zastosowano {n} wiersz(y) salda początkowego)",
+    "import.importedMonth": " Miesiąc danych: {month}.",
+    "dashboard.mismatchWarning": "⚠ Niezgodność: przeglądasz {viewMonth}, ale ostatnio zaimportowane dane CSV dotyczą {dataMonth}. Zmień miesiąc powyżej, aby je zobaczyć, albo ponownie zaimportuj plik dla {viewMonth}.",
+    "table.addRow": "+ Dodaj wiersz",
+    "table.downloadCsv": "Pobierz CSV",
+    "col.date": "Data",
+    "col.description": "Opis",
+    "col.bankCategory": "Dodatkowe informacje",
+    "col.value": "Kwota (PLN)",
+    "outcome.valueHint": "Kwoty Rozchodu muszą być ujemne — wpisuj je ze znakiem „-” na początku (np. -120.50). Nowe wiersze zaczynają się od wpisanego „-”; wystarczy dopisać liczbę.",
+    "dashboard.saveCsvUnsaved": "Zapisz CSV (niezapisane zmiany)",
+    "dashboard.saveCsvSaved": "Zapisz CSV (zapisano)",
+    "dashboard.jarsUnmarked": "Brak słoików: {n} wiersz(y) Rozchodu bez słoika",
+    "dashboard.jarsFilled": "Słoiki uzupełnione — wszystkie wiersze Rozchodu przypisane",
+    "dashboard.allJarsGreen": "Jesteś na najlepszej drodze do Wolności Finansowej ;)",
+    "totals.income": "Suma przychodów: {amt}",
+    "totals.outcome": "Suma rozchodów: {amt}",
+    "outcome.valueInvalidHint": "Ta wartość jest dodatnia. Wiersze Rozchodu muszą być ujemne — dodaj „-” na początku.",
+    "col.type": "Typ",
+    "col.incomeType": "Typ przychodu",
+    "col.jar": "Słoik",
+    "type.internal": "wewnętrzny",
+    "jar.intJar": "Wewnętrzny (techniczny)",
+    "opt.none": "(brak)",
+    "cashLabel": "Gotówka",
+    "accountLabel": "Konto",
+    "creditCardLabel": "Karta kredytowa",
+  }
+};
+
+let currentLang = "en";
+const LANG_STORAGE_KEY = "lechuteqBudget.lang";
+try {
+  const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
+  if (savedLang && I18N[savedLang]) currentLang = savedLang;
+} catch (e) { /* ignore */ }
+
+let currentTheme = "light";
+const THEME_STORAGE_KEY = "lechuteqBudget.theme";
+try {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  if (savedTheme === "light" || savedTheme === "dark") currentTheme = savedTheme;
+} catch (e) { /* ignore */ }
+
+function t(key, vars) {
+  let s = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.en[key]) || key;
+  if (vars) {
+    Object.keys(vars).forEach(k => { s = s.split("{" + k + "}").join(vars[k]); });
+  }
+  return s;
+}
+
+function applyStaticTranslations() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", currentTheme);
+  document.querySelectorAll("#themeToggle [data-theme-choice]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-theme-choice") === currentTheme);
+  });
+}
+
+function applyLangToggleUI() {
+  document.querySelectorAll("#langToggle [data-lang-choice]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-lang-choice") === currentLang);
+  });
+}
+
+/* ===================== Jar definitions ===================== */
+const JARS = [
+  { code: "NEC",  name: "Necessities",                     goal: 0.55, mode: "cap" },
+  { code: "FFA",  name: "Financial Freedom Account",        goal: 0.10, mode: "target" },
+  { code: "LTSS", name: "Long Term Savings 4 Spend",         goal: 0.10, mode: "target" },
+  { code: "EDU",  name: "Education",                        goal: 0.10, mode: "target" },
+  { code: "PLAY", name: "Play",                             goal: 0.10, mode: "target" },
+  { code: "GIVE", name: "Give",                             goal: 0.05, mode: "target" },
+];
+
+// "internal" is a technical type for money moved manually between wallets (e.g. paying off a
+// credit card from your account). Internal rows are excluded entirely from balance cards,
+// lifetime/monthly Income-Outcome totals, and jar totals — see isInternalType()/isInternalTransferRow() below.
+const TYPE_OPTIONS = ["", "account", "credit_card", "cash", "internal"];
+function isInternalType(typeKey) { return typeKey === "internal"; }
+// int_jar is a technical, non-jar category auto-assigned to Outcome rows when their type is set
+// to "internal". It's deliberately NOT part of JARS (the 6 Jars dashboard) — it never counts
+// toward any jar's spending, goal percentage, or the "jar missing" completeness check, since an
+// internal transfer isn't real outcome/spending.
+const INT_JAR_CODE = "int_jar";
+const JAR_OPTIONS = ["", ...JARS.map(j => j.code), INT_JAR_CODE];
+const INCOME_TYPE_OPTIONS = ["", "salary", "selling", "additional", "returns", "passive", "other"];
+
+const BALANCE_TYPES = [
+  { key: "cash", i18nKey: "cashLabel" },
+  { key: "account", i18nKey: "accountLabel" },
+  { key: "credit_card", i18nKey: "creditCardLabel" },
+];
+
+// Currency selector is display-only: it swaps the symbol/suffix shown next to amounts, but never
+// converts or recalculates the underlying number. Data is always stored and shown as PLN values.
+const CURRENCY_SYMBOLS = { PLN: "PLN", EUR: "€", USD: "$" };
+let displayCurrency = "PLN";
+const CURRENCY_STORAGE_KEY = "lechuteqBudget.displayCurrency";
+try {
+  const savedCur = localStorage.getItem(CURRENCY_STORAGE_KEY);
+  if (savedCur && CURRENCY_SYMBOLS[savedCur]) displayCurrency = savedCur;
+} catch (e) { /* ignore */ }
+
+const OPENING_BALANCE_MARKER = "STARTING BALANCE";
+
+/* ===================== State ===================== */
+let incomeRows = [];   // {date, description, bank_category, value, type, income_type}
+let outcomeRows = [];  // {date, description, bank_category, value, type, jar}
+let startingBalances = { cash: 0, account: 0, credit_card: 0 };
+let lastImportedMonth = null; // "YYYY-MM" of the most recently loaded CSV pair, or null if none loaded yet
+let hasUnsavedChanges = false; // true once Income/Outcome rows are edited/added/deleted/imported since the last CSV save
+
+function markUnsaved() {
+  hasUnsavedChanges = true;
+  updateSaveCsvBtn();
+}
+function markSaved() {
+  hasUnsavedChanges = false;
+  updateSaveCsvBtn();
+}
+function updateSaveCsvBtn() {
+  const btn = document.getElementById("saveCsvBtn");
+  if (!btn) return;
+  btn.className = hasUnsavedChanges ? "save-csv-btn dirty" : "save-csv-btn clean";
+  btn.textContent = hasUnsavedChanges ? t("dashboard.saveCsvUnsaved") : t("dashboard.saveCsvSaved");
+}
+
+const BAL_STORAGE_KEY = "lechuteqBudget.startingBalances";
+try {
+  const saved = localStorage.getItem(BAL_STORAGE_KEY);
+  if (saved) startingBalances = Object.assign(startingBalances, JSON.parse(saved));
+} catch (e) { /* ignore */ }
+
+/* ===================== mBank text parser ===================== */
+const POLISH_MONTHS = {
+  "stycznia": 1, "lutego": 2, "marca": 3, "kwietnia": 4, "maja": 5, "czerwca": 6,
+  "lipca": 7, "sierpnia": 8, "września": 9, "wrzesnia": 9, "października": 10,
+  "pazdziernika": 10, "listopada": 11, "grudnia": 12
+};
+
+function tryParseDateLine(line) {
+  const s = line.trim();
+  let m = s.match(/^(\d{1,2})\s+([a-ząćęłńóśźż]+)\s+(\d{4})$/i);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const mon = POLISH_MONTHS[m[2].toLowerCase()];
+    const year = parseInt(m[3], 10);
+    if (mon && day >= 1 && day <= 31 && year > 2000) {
+      return isoDate(year, mon, day);
+    }
+  }
+  m = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+  if (m) {
+    const day = parseInt(m[1], 10), mon = parseInt(m[2], 10), year = parseInt(m[3], 10);
+    if (mon >= 1 && mon <= 12 && day >= 1 && day <= 31) {
+      return isoDate(year, mon, day);
+    }
+  }
+  return null;
+}
+
+function isoDate(y, m, d) {
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function todayISO() {
+  const d = new Date();
+  return isoDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+}
+
+function tryParseAmountLine(line) {
+  const s = line.trim();
+  const idx = s.indexOf("PLN");
+  if (idx === -1) return null;
+  let numPart = s.slice(0, idx).trim();
+  let cleaned = "";
+  for (const ch of numPart) {
+    if (ch === "-" || (ch >= "0" && ch <= "9")) cleaned += ch;
+    else if (ch === ",") cleaned += ".";
+  }
+  if (cleaned === "" || cleaned === "-") return null;
+  const val = parseFloat(cleaned);
+  return isNaN(val) ? null : val;
+}
+
+function parseMBankText(text) {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const n = lines.length;
+  let curDate = null;
+  const today = todayISO();
+  const newIncome = [];
+  const newOutcome = [];
+
+  let i = 0;
+  while (i < n) {
+    const ln = lines[i].trim();
+
+    const dtest = tryParseDateLine(ln);
+    if (dtest) {
+      curDate = dtest;
+      i++;
+      continue;
+    }
+
+    if (ln.startsWith("Kategoria:")) {
+      let category = ln.slice("Kategoria:".length).trim();
+
+      let desc = "";
+      let k = i - 1;
+      while (k >= 0) {
+        if (lines[k].trim() !== "") { desc = lines[k].trim(); break; }
+        k--;
+      }
+
+      if (category === "") {
+        let k2 = i + 1;
+        while (k2 < n) {
+          if (lines[k2].trim() !== "") { category = lines[k2].trim(); break; }
+          k2++;
+        }
+      }
+
+      let m = i + 1;
+      let foundKwota = false;
+      while (m < n && m <= i + 6) {
+        if (lines[m].trim().startsWith("Kwota:")) { foundKwota = true; break; }
+        m++;
+      }
+
+      if (foundKwota) {
+        const amtStr = lines[m].trim().slice("Kwota:".length).trim();
+        let amtVal = null;
+        let mm = m;
+        if (amtStr !== "") {
+          amtVal = tryParseAmountLine(amtStr);
+        }
+        if (amtVal === null) {
+          mm = m + 1;
+          while (mm < n) {
+            if (lines[mm].trim() !== "") {
+              amtVal = tryParseAmountLine(lines[mm].trim());
+              break;
+            }
+            mm++;
+          }
+        }
+
+        if (amtVal !== null) {
+          const useDate = curDate || today;
+          if (amtVal < 0) {
+            newOutcome.push({ date: useDate, description: desc, bank_category: category, value: amtVal, type: "account", jar: "NEC" });
+          } else {
+            newIncome.push({ date: useDate, description: desc, bank_category: category, value: amtVal, type: "account", income_type: "" });
+          }
+        }
+        i = mm + 1;
+      } else {
+        i++;
+      }
+    } else {
+      i++;
+    }
+  }
+  return { newIncome, newOutcome };
+}
+
+// mBank "transaction list" paste format (the compact history view):
+//   DD.MM.YYYY
+//   DESCRIPTION
+//   możliwa zmiana kategorii   (or a real category name)
+//   -123,45 PLN                (amount, comma decimal, optional thousands spaces)
+//   [BLIK Icon]                (optional)
+//   Przelew / Płatność kartą / Płatność Blik / Nierozliczone   (status, ignored)
+// interleaved with blank / tab-only lines.
+const MBANK_CATEGORY_PLACEHOLDER = "możliwa zmiana kategorii";
+function parseMBankListText(text) {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n")
+    .map(l => l.trim())
+    .filter(l => l !== "");
+  const n = lines.length;
+  const newIncome = [];
+  const newOutcome = [];
+  let i = 0;
+  while (i < n) {
+    const date = tryParseDateLine(lines[i]);
+    if (date === null) { i++; continue; }
+    // Collect the block until the next date line (or end)
+    let j = i + 1;
+    const block = [];
+    while (j < n && tryParseDateLine(lines[j]) === null) {
+      block.push(lines[j]);
+      j++;
+    }
+    // Within the block: first line = description, find the first amount line
+    if (block.length >= 2) {
+      const desc = block[0];
+      let category = "";
+      let amtVal = null;
+      for (let k = 1; k < block.length; k++) {
+        const v = tryParseAmountLine(block[k]);
+        if (v !== null) { amtVal = v; break; }
+        // lines between description and amount are category info
+        if (category === "" && block[k] !== MBANK_CATEGORY_PLACEHOLDER) category = block[k];
+      }
+      if (amtVal !== null && desc !== "") {
+        if (amtVal < 0) {
+          newOutcome.push({ date, description: desc, bank_category: category, value: amtVal, type: "account", jar: "NEC" });
+        } else {
+          newIncome.push({ date, description: desc, bank_category: category, value: amtVal, type: "account", income_type: "" });
+        }
+      }
+    }
+    i = j;
+  }
+  return { newIncome, newOutcome };
+}
+
+// Dispatcher: try the detail format first ("Kategoria:"/"Kwota:" lines); if it
+// finds nothing, fall back to the compact transaction-list format.
+function parseMBankAny(text) {
+  const detail = parseMBankText(text);
+  if (detail.newIncome.length + detail.newOutcome.length > 0) return detail;
+  return parseMBankListText(text);
+}
+
+/* ===================== Rendering: Income/Outcome tables ===================== */
+// Sort state per table: which column key is active and in which direction. Sorting mutates the
+// underlying rows array in place, so row indexes used for edit/delete wiring stay consistent
+// with what's rendered.
+const tableSortState = {
+  income: { key: null, dir: "asc" },
+  outcome: { key: null, dir: "asc" },
+};
+
+function sortValueFor(row, key) {
+  if (key === "value") return numVal(row);
+  return (row[key] || "").toString().toLowerCase();
+}
+
+function applySort(rows, tableName) {
+  const state = tableSortState[tableName];
+  if (!state.key) return;
+  const dir = state.dir === "asc" ? 1 : -1;
+  rows.sort((a, b) => {
+    const av = sortValueFor(a, state.key);
+    const bv = sortValueFor(b, state.key);
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+}
+
+function wireSortableHeaders(tableId, tableName, rows, onChange) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const state = tableSortState[tableName];
+  table.querySelectorAll("th[data-sort-key]").forEach(th => {
+    const key = th.getAttribute("data-sort-key");
+    th.classList.remove("sort-asc", "sort-desc");
+    if (state.key === key) th.classList.add(state.dir === "asc" ? "sort-asc" : "sort-desc");
+    th.onclick = () => {
+      if (state.key === key) {
+        state.dir = state.dir === "asc" ? "desc" : "asc";
+      } else {
+        state.key = key;
+        state.dir = "asc";
+      }
+      applySort(rows, tableName);
+      onChange();
+    };
+  });
+}
+
+function renderIncomeTable() {
+  applySort(incomeRows, "income");
+  const body = document.getElementById("incomeBody");
+  body.innerHTML = "";
+  incomeRows.forEach((row, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="text" data-field="date" value="${escapeAttr(row.date)}"></td>
+      <td><input type="text" data-field="description" value="${escapeAttr(row.description)}"></td>
+      <td><input type="text" data-field="bank_category" value="${escapeAttr(row.bank_category)}"></td>
+      <td><input type="text" data-field="value" value="${row.value}"></td>
+      <td>${typeSelectHTML(row.type)}</td>
+      <td>${incomeTypeSelectHTML(row.income_type)}</td>
+      <td><span class="del-btn" title="Delete row">&times;</span></td>
+    `;
+    wireRow(tr, idx, incomeRows, renderAll);
+    body.appendChild(tr);
+  });
+  const totalEl = document.getElementById("incomeTotalLine");
+  if (totalEl) {
+    // Internal-transfer rows (money moved manually between wallets) are not real income —
+    // exclude them so this lifetime total isn't inflated by them.
+    const total = incomeRows.filter(r => isRealRow(r) && !isInternalTransferRow(r)).reduce((s, r) => s + numVal(r), 0);
+    totalEl.textContent = t("totals.income", { amt: fmtPLN(total) });
+  }
+  wireSortableHeaders("incomeTable", "income", incomeRows, renderAll);
+}
+
+function renderOutcomeTable() {
+  applySort(outcomeRows, "outcome");
+  const body = document.getElementById("outcomeBody");
+  body.innerHTML = "";
+  outcomeRows.forEach((row, idx) => {
+    const tr = document.createElement("tr");
+    const numVal = Number(row.value);
+    const isInvalid = !isNaN(numVal) && numVal > 0;
+    tr.innerHTML = `
+      <td><input type="text" data-field="date" value="${escapeAttr(row.date)}"></td>
+      <td><input type="text" data-field="description" value="${escapeAttr(row.description)}"></td>
+      <td><input type="text" data-field="bank_category" value="${escapeAttr(row.bank_category)}"></td>
+      <td><input type="text" data-field="value" class="${isInvalid ? "value-invalid" : ""}" title="${isInvalid ? t("outcome.valueInvalidHint") : ""}" value="${escapeAttr(String(row.value))}"></td>
+      <td>${typeSelectHTML(row.type)}</td>
+      <td>${jarSelectHTML(row.jar)}</td>
+      <td><span class="del-btn" title="Delete row">&times;</span></td>
+    `;
+    wireRow(tr, idx, outcomeRows, renderAll, { negativeOnly: true });
+    body.appendChild(tr);
+  });
+  const totalEl = document.getElementById("outcomeTotalLine");
+  if (totalEl) {
+    // Internal-transfer rows (money moved manually between wallets) are not real spending —
+    // exclude them so this lifetime total isn't inflated by them.
+    const total = outcomeRows.filter(r => isRealRow(r) && !isInternalTransferRow(r)).reduce((s, r) => s + numVal(r), 0);
+    totalEl.textContent = t("totals.outcome", { amt: fmtPLN(total) });
+  }
+  wireSortableHeaders("outcomeTable", "outcome", outcomeRows, renderAll);
+}
+
+function typeSelectHTML(selected) {
+  return `<select data-field="type">` +
+    TYPE_OPTIONS.map(o => {
+      const label = o === "internal" ? t("type.internal") : (o || t("opt.none"));
+      return `<option value="${o}" ${o === selected ? "selected" : ""}>${label}</option>`;
+    }).join("") +
+    `</select>`;
+}
+function jarSelectHTML(selected) {
+  return `<select data-field="jar">` +
+    JAR_OPTIONS.map(o => {
+      const label = o === INT_JAR_CODE ? t("jar.intJar") : (o || t("opt.none"));
+      return `<option value="${o}" ${o === selected ? "selected" : ""}>${label}</option>`;
+    }).join("") +
+    `</select>`;
+}
+function incomeTypeSelectHTML(selected) {
+  return `<select data-field="income_type">` +
+    INCOME_TYPE_OPTIONS.map(o => `<option value="${o}" ${o === selected ? "selected" : ""}>${o || t("opt.none")}</option>`).join("") +
+    `</select>`;
+}
+
+function escapeAttr(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function wireRow(tr, idx, arr, onChange, opts) {
+  opts = opts || {};
+  tr.querySelectorAll("[data-field]").forEach(el => {
+    el.addEventListener("change", () => {
+      const field = el.getAttribute("data-field");
+      let val = el.value;
+      if (field === "value") {
+        const raw = val.trim();
+        if (opts.negativeOnly && raw === "-") {
+          // user is mid-typing a negative amount; keep the literal "-" instead of coercing to 0
+          val = "-";
+        } else {
+          val = parseFloat(raw.replace(",", ".")) || 0;
+          if (opts.negativeOnly && val === 0 && raw !== "" && raw !== "-" && raw !== "0") {
+            val = raw; // unparseable, keep as-is so the invalid-state styling can flag it
+          }
+        }
+      }
+      arr[idx][field] = val;
+      // Switching an Outcome row to the "internal" type auto-assigns the technical INT_JAR_CODE
+      // category — it's a wallet-to-wallet transfer, not real spending, so it shouldn't need (or
+      // count toward) a real jar.
+      if (field === "type" && val === "internal" && arr[idx].hasOwnProperty("jar")) {
+        arr[idx].jar = INT_JAR_CODE;
+      }
+      markUnsaved();
+      onChange();
+    });
+  });
+  tr.querySelector(".del-btn").addEventListener("click", () => {
+    arr.splice(idx, 1);
+    markUnsaved();
+    onChange();
+  });
+}
+
+function numVal(r) {
+  const n = Number(r.value);
+  return isNaN(n) ? 0 : n;
+}
+
+/* ===================== Dashboard: balances ===================== */
+function isRealRow(r) {
+  // Exclude synthetic opening-balance rows exported/imported for historical CSVs
+  return r.description !== OPENING_BALANCE_MARKER;
+}
+
+function isInternalTransferRow(r) {
+  // Rows marked as internal transfers (money moved manually between wallets, e.g. paying off a
+  // credit card) are not real income or spending — exclude them from totals wherever this is used.
+  // Checking both type and jar catches rows set either way (e.g. loaded from an older CSV).
+  return isInternalType(r.type) || r.jar === INT_JAR_CODE;
+}
+
+// Internal-transfer Outcome rows always represent money moving Account -> Credit card (e.g.
+// paying off a credit card manually). They're excluded from Income/Outcome totals and jars, but
+// they still have to move real money: the Account balance decreases (the row's own negative
+// value, same as a normal Account outcome) and the Credit card balance is credited by the same
+// amount (reducing what's owed), same direction a credit_card-type Income row would have.
+function internalTransferContribution(typeKey, rows) {
+  if (typeKey === "account") {
+    return rows.filter(r => isRealRow(r) && isInternalTransferRow(r))
+               .reduce((s, r) => s + numVal(r), 0); // negative — leaves the account
+  }
+  if (typeKey === "credit_card") {
+    return rows.filter(r => isRealRow(r) && isInternalTransferRow(r))
+               .reduce((s, r) => s + Math.abs(numVal(r)), 0); // positive — pays down the card
+  }
+  return 0;
+}
+
+function computeBalance(typeKey) {
+  const incomeSum = incomeRows.filter(r => r.type === typeKey && isRealRow(r))
+                               .reduce((s, r) => s + numVal(r), 0);
+  const outcomeSum = outcomeRows.filter(r => r.type === typeKey && isRealRow(r))
+                                 .reduce((s, r) => s + numVal(r), 0); // outcome values are negative
+  const internalSum = internalTransferContribution(typeKey, outcomeRows);
+  const start = Number(startingBalances[typeKey] || 0);
+  return start + incomeSum + outcomeSum + internalSum;
+}
+
+function computeBalanceMonthTotal(typeKey) {
+  const month = currentMonth();
+  const incomeSum = incomeRows.filter(r => r.type === typeKey && isRealRow(r) && (r.date || "").slice(0,7) === month)
+                               .reduce((s, r) => s + numVal(r), 0);
+  const outcomeSum = outcomeRows.filter(r => r.type === typeKey && isRealRow(r) && (r.date || "").slice(0,7) === month)
+                                 .reduce((s, r) => s + numVal(r), 0);
+  const monthRows = outcomeRows.filter(r => (r.date || "").slice(0,7) === month);
+  const internalSum = internalTransferContribution(typeKey, monthRows);
+  return incomeSum + outcomeSum + internalSum;
+}
+
+function renderBalances() {
+  const grid = document.getElementById("balanceGrid");
+  grid.innerHTML = "";
+  BALANCE_TYPES.forEach(bt => {
+    const total = computeBalance(bt.key);
+    const monthTotal = computeBalanceMonthTotal(bt.key);
+    const monthOk = monthTotal >= 0;
+    const label = t(bt.i18nKey);
+
+    const div = document.createElement("div");
+    div.className = "balance-card";
+    div.innerHTML = `
+      <div class="card-top-right ${monthOk ? 'ok' : 'warn'}" title="${label}">
+        ${monthOk ? '+' : ''}${fmtPLN(monthTotal)}
+      </div>
+      <div class="label">${label}</div>
+      <div class="amount">${fmtPLN(total)}</div>
+      <div class="start-row">
+        <label style="margin:0;">${t("dashboard.startingBalance")}</label>
+        <input type="number" step="0.01" data-balance-key="${bt.key}" value="${Number(startingBalances[bt.key] || 0)}">
+        <button class="secondary" data-reset-key="${bt.key}" style="padding:6px 10px;">${t("dashboard.setZero")}</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+
+  grid.querySelectorAll("[data-balance-key]").forEach(input => {
+    input.addEventListener("change", () => {
+      const key = input.getAttribute("data-balance-key");
+      startingBalances[key] = parseFloat(input.value) || 0;
+      saveBalances();
+      renderBalances();
+    });
+  });
+  grid.querySelectorAll("[data-reset-key]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.getAttribute("data-reset-key");
+      startingBalances[key] = 0;
+      saveBalances();
+      renderBalances();
+    });
+  });
+
+  // total this month badge (all types combined)
+  // Internal-transfer rows are excluded so this figure reflects actual money in/out, not
+  // a manual wallet-to-wallet transfer.
+  const month = currentMonth();
+  const totalIncome = incomeRows.filter(r => isRealRow(r) && !isInternalTransferRow(r) && (r.date || "").slice(0,7) === month)
+                                 .reduce((s, r) => s + numVal(r), 0);
+  const totalOutcome = outcomeRows.filter(r => isRealRow(r) && !isInternalTransferRow(r) && (r.date || "").slice(0,7) === month)
+                                   .reduce((s, r) => s + numVal(r), 0);
+  const netTotal = totalIncome + totalOutcome;
+  const badge = document.getElementById("totalThisMonthBadge");
+  badge.textContent = (netTotal >= 0 ? "+" : "") + fmtPLN(netTotal);
+  badge.className = "total-month-value " + (netTotal >= 0 ? "ok" : "warn");
+}
+
+function saveBalances() {
+  try { localStorage.setItem(BAL_STORAGE_KEY, JSON.stringify(startingBalances)); } catch (e) { /* ignore */ }
+}
+
+/* ===================== Dashboard: jars ===================== */
+function currentMonth() {
+  const val = document.getElementById("monthFilter").value; // "YYYY-MM"
+  return val || todayISO().slice(0, 7);
+}
+
+function classifyMonth(month) {
+  const todayMonth = todayISO().slice(0, 7);
+  if (month < todayMonth) return "historical";
+  if (month === todayMonth) return "current";
+  return "prediction";
+}
+
+function renderMonthStatusBadge(month) {
+  const badge = document.getElementById("monthStatusBadge");
+  const kind = classifyMonth(month);
+  const cls = kind === "historical" ? "info" : kind === "current" ? "ok" : "warn";
+  const label = kind === "historical" ? t("dashboard.monthHistorical")
+              : kind === "current" ? t("dashboard.monthCurrent")
+              : t("dashboard.monthPrediction");
+  badge.textContent = label;
+  badge.className = "status-badge " + cls;
+}
+
+function renderImportedMonthMismatch() {
+  const el = document.getElementById("importedMonthMismatch");
+  if (!el) return;
+  const month = currentMonth();
+  if (lastImportedMonth && lastImportedMonth !== month) {
+    el.innerHTML = `<div class="mismatch-banner">${t("dashboard.mismatchWarning", { viewMonth: month, dataMonth: lastImportedMonth })}</div>`;
+  } else {
+    el.innerHTML = "";
+  }
+}
+
+function renderDashboard() {
+  const month = currentMonth();
+  renderMonthStatusBadge(month);
+  renderImportedMonthMismatch();
+  // Internal-transfer rows (money moved manually between wallets) are not real income/spending —
+  // exclude them so "Income this month" / jar totals reflect actual money in/out.
+  const monthIncome = incomeRows.filter(r => isRealRow(r) && !isInternalTransferRow(r) && (r.date || "").slice(0,7) === month)
+                                 .reduce((s, r) => s + numVal(r), 0);
+  const monthOutcome = outcomeRows.filter(r => isRealRow(r) && !isInternalTransferRow(r) && (r.date || "").slice(0,7) === month)
+                                   .reduce((s, r) => s + numVal(r), 0); // negative
+
+  const jarSpend = {};
+  JARS.forEach(j => jarSpend[j.code] = 0);
+  outcomeRows.filter(r => isRealRow(r) && (r.date || "").slice(0,7) === month).forEach(r => {
+    if (jarSpend.hasOwnProperty(r.jar)) {
+      jarSpend[r.jar] += Math.abs(numVal(r));
+    }
+  });
+
+  const monthKind = classifyMonth(month);
+  const incomeLabel = monthKind === "historical" ? t("dashboard.incomeHistorical")
+                     : monthKind === "prediction" ? t("dashboard.incomePrediction")
+                     : t("dashboard.incomeThisMonth");
+  document.getElementById("monthSummary").textContent =
+    `${incomeLabel}: ${fmtPLN(monthIncome)}`;
+
+  const jarsTotalSpend = Math.abs(monthOutcome);
+  // Neutral info lines: income on top, outcome below — same format everywhere
+  document.getElementById("jarsIncomeLine").textContent = t("totals.income", { amt: fmtPLN(monthIncome) });
+  document.getElementById("jarsSpentLine").textContent = t("totals.outcome", { amt: fmtPLN(jarsTotalSpend) });
+
+  // Jar completeness: red when any Outcome row for this month has no jar assigned, green when all marked.
+  // Internal-transfer rows are not spending — they don't need a jar and are excluded.
+  const validJarCodes = JARS.map(j => j.code);
+  const unmarkedCount = outcomeRows.filter(r =>
+    isRealRow(r) && !isInternalTransferRow(r) &&
+    (r.date || "").slice(0,7) === month && !validJarCodes.includes(r.jar)
+  ).length;
+  const fillStatus = document.getElementById("jarsFillStatus");
+  if (unmarkedCount > 0) {
+    fillStatus.textContent = t("dashboard.jarsUnmarked", { n: unmarkedCount });
+    fillStatus.className = "status-badge warn";
+  } else {
+    fillStatus.textContent = t("dashboard.jarsFilled");
+    fillStatus.className = "status-badge ok";
+  }
+
+  const grid = document.getElementById("jarGrid");
+  grid.innerHTML = "";
+  let allJarsOk = true;
+  JARS.forEach(j => {
+    const amt = jarSpend[j.code];
+    const curPct = monthIncome > 0 ? amt / monthIncome : 0;
+    const diff = curPct - j.goal;
+    const barWidth = Math.min(curPct, 1) * 100;
+    const goalMarkerPos = Math.min(j.goal, 1) * 100;
+
+    // Color logic:
+    // NEC (mode "cap"): green while curPct <= goal, red when over.
+    // All other jars (mode "target"): red while curPct < goal, green once curPct >= goal.
+    let isOk;
+    if (j.mode === "cap") {
+      isOk = curPct <= j.goal;
+    } else {
+      isOk = curPct >= j.goal;
+    }
+    if (!isOk) allJarsOk = false;
+    const barClass = isOk ? "ok" : "warn";
+    const badgeClass = isOk ? "ok" : "warn";
+    const badgeText = j.mode === "cap"
+      ? (isOk ? t("dashboard.withinLimit") : t("dashboard.overLimit"))
+      : (isOk ? t("dashboard.goalReached") : t("dashboard.belowGoal"));
+
+    const diffClass = isOk ? "diff-pos" : "diff-neg";
+    const diffLabel = diff <= 0 ? t("dashboard.underGoal") : t("dashboard.overGoal");
+
+    const div = document.createElement("div");
+    div.className = "jar-card";
+    div.innerHTML = `
+      <div class="jar-icon" title="${j.code}">${jarIconSVG(j.code)}</div>
+      <div class="code">${j.code}</div>
+      <div class="name">${j.name}</div>
+      <div class="bar-bg">
+        <div class="bar-fill-clip"><div class="bar-fill ${barClass}" style="width:${barWidth}%"></div></div>
+        <div class="goal-marker" style="left:calc(${goalMarkerPos}% - 1.5px)"></div>
+      </div>
+      <div class="jar-nums">
+        <span>${t("dashboard.goal")} <b>${(j.goal*100).toFixed(0)}%</b></span>
+        <span class="${diffClass}">${t("dashboard.current")} <b>${(curPct*100).toFixed(1)}%</b></span>
+      </div>
+      <div class="jar-nums" style="margin-top:4px;">
+        <span>${fmtPLN(amt)} ${t("dashboard.spent")}</span>
+        <span class="${diffClass}">${diff <= 0 ? "" : "+"}${(diff*100).toFixed(1)}pp ${diffLabel}</span>
+      </div>
+      <div class="status-badge ${badgeClass}">${badgeText}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Easter egg: when every jar is green (on goal / within limit), celebrate it next to the title.
+  const eggEl = document.getElementById("jarsAllGreenMsg");
+  if (eggEl) {
+    eggEl.textContent = allJarsOk ? t("dashboard.allJarsGreen") : "";
+    eggEl.style.display = allJarsOk ? "" : "none";
+  }
+}
+
+// Simple flat glass-jar icon (lid + jar body + a "fill" band), labeled with the jar's shortcut.
+function jarIconSVG(code) {
+  return `
+    <svg viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <rect x="11" y="3" width="12" height="4" rx="1.5" fill="var(--muted)"/>
+      <path d="M9 9 h16 a2 2 0 0 1 2 2 v16 a3 3 0 0 1 -3 3 h-14 a3 3 0 0 1 -3 -3 v-16 a2 2 0 0 1 2 -2 z"
+            fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+      <path d="M9.8 20 h14.4 v6.8 a2.6 2.6 0 0 1 -2.6 2.6 h-9.2 a2.6 2.6 0 0 1 -2.6 -2.6 z"
+            fill="var(--accent-light)"/>
+      <text x="17" y="19" text-anchor="middle" class="jar-icon-label" fill="var(--accent)">${code}</text>
+    </svg>`;
+}
+
+function fmtPLN(n) {
+  // Stored/native values are always PLN and never change. The currency selector only swaps the
+  // displayed symbol/suffix — it does not convert or recalculate the number itself.
+  const symbol = CURRENCY_SYMBOLS[displayCurrency] || "PLN";
+  const numStr = (n || 0).toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return displayCurrency === "PLN" ? `${numStr} PLN` : `${symbol} ${numStr}`;
+}
+
+function renderAll() {
+  applyStaticTranslations();
+  renderIncomeTable();
+  renderOutcomeTable();
+  renderBalances();
+  renderDashboard();
+}
+
+/* ===================== CSV load/save ===================== */
+function loadCSVFile(file) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => resolve(results.data),
+      error: reject
+    });
+  });
+}
+
+function rowsToCSV(rows, columns) {
+  const header = columns.join(",");
+  const lines = rows.map(r => columns.map(c => csvEscape(r[c])).join(","));
+  return [header, ...lines].join("\n");
+}
+function csvEscape(v) {
+  const s = String(v ?? "");
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+function downloadCSV(rows, columns, filename) {
+  const csv = rowsToCSV(rows, columns);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function suggestedFilename(kind) {
+  const month = currentMonth().replace("-", "");
+  return `${month}_${kind}.csv`;
+}
+
+/* ===================== Header date ===================== */
+function renderTodayDate() {
+  const d = new Date();
+  const locale = currentLang === "pl" ? "pl-PL" : "en-GB";
+  const formatted = d.toLocaleDateString(locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  document.getElementById("todayDate").textContent = formatted;
+}
+
+/* ===================== Wiring ===================== */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+  });
+});
+
+document.querySelectorAll(".manual-lang-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".manual-lang-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".manual-content").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("manual-" + tab.dataset.lang).classList.add("active");
+  });
+});
+
+document.querySelectorAll("#themeToggle [data-theme-choice]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentTheme = btn.getAttribute("data-theme-choice");
+    try { localStorage.setItem(THEME_STORAGE_KEY, currentTheme); } catch (e) { /* ignore */ }
+    applyTheme();
+  });
+});
+
+document.querySelectorAll("#langToggle [data-lang-choice]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentLang = btn.getAttribute("data-lang-choice");
+    try { localStorage.setItem(LANG_STORAGE_KEY, currentLang); } catch (e) { /* ignore */ }
+    applyLangToggleUI();
+    renderTodayDate();
+    renderAll();
+  });
+});
+
+document.getElementById("monthFilter").value = todayISO().slice(0, 7);
+document.getElementById("monthFilter").addEventListener("change", renderDashboard);
+
+document.getElementById("addIncomeRowBtn").addEventListener("click", () => {
+  incomeRows.unshift({ date: todayISO(), description: "", bank_category: "", value: 0, type: "", income_type: "" });
+  // Clear any active sort so the new blank row stays at the very top, right under the
+  // Add row button, ready to fill in — instead of being sorted away somewhere in the list.
+  tableSortState.income.key = null;
+  markUnsaved();
+  renderAll();
+});
+document.getElementById("addOutcomeRowBtn").addEventListener("click", () => {
+  outcomeRows.unshift({ date: todayISO(), description: "", bank_category: "", value: "-", type: "", jar: "" });
+  tableSortState.outcome.key = null;
+  markUnsaved();
+  renderAll();
+});
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  const text = document.getElementById("pasteArea").value;
+  const statusEl = document.getElementById("importStatus");
+  if (!text.trim()) {
+    statusEl.innerHTML = `<div class="status-msg status-err">${t("import.noText")}</div>`;
+    return;
+  }
+  const { newIncome, newOutcome } = parseMBankAny(text);
+  incomeRows.push(...newIncome);
+  outcomeRows.push(...newOutcome);
+  markUnsaved();
+  renderAll();
+  statusEl.innerHTML = `<div class="status-msg status-ok">${t("import.imported", { inc: newIncome.length, out: newOutcome.length })}</div>`;
+  document.getElementById("pasteArea").value = "";
+});
+document.getElementById("clearPasteBtn").addEventListener("click", () => {
+  document.getElementById("pasteArea").value = "";
+});
+
+function detectDominantMonth(rows) {
+  const counts = {};
+  rows.forEach(r => {
+    if (r.description === OPENING_BALANCE_MARKER) return;
+    const m = (r.date || "").slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(m)) counts[m] = (counts[m] || 0) + 1;
+  });
+  let best = null, bestCount = 0;
+  Object.keys(counts).forEach(m => {
+    if (counts[m] > bestCount) { best = m; bestCount = counts[m]; }
+  });
+  return best;
+}
+
+document.getElementById("incomeFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const data = await loadCSVFile(file);
+  const parsed = data.map(r => ({
+    date: r.date || "", description: r.description || "", bank_category: r.bank_category || "",
+    value: parseFloat(r.value) || 0, type: r.type || "", income_type: r.income_type || ""
+  }));
+  let openingCount = 0;
+  incomeRows = parsed.filter(r => {
+    if (r.description === OPENING_BALANCE_MARKER && startingBalances.hasOwnProperty(r.type)) {
+      startingBalances[r.type] = r.value;
+      openingCount++;
+      return false;
+    }
+    return true;
+  });
+  const detectedMonth = detectDominantMonth(parsed);
+  if (detectedMonth) lastImportedMonth = detectedMonth;
+  saveBalances();
+  markSaved(); // freshly loaded from disk — nothing unsaved yet
+  renderAll();
+  const openingNote = openingCount > 0 ? t("import.openingApplied", { n: openingCount }) : "";
+  const monthNote = detectedMonth ? t("import.importedMonth", { month: detectedMonth }) : "";
+  document.getElementById("loadStatus").innerHTML = `<div class="status-msg status-ok">${t("import.loadedIncome", { n: incomeRows.length, file: file.name, note: openingNote })}${monthNote}</div>`;
+  e.target.value = ""; // allow re-selecting the same file again later
+});
+document.getElementById("outcomeFileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const data = await loadCSVFile(file);
+  const parsed = data.map(r => ({
+    date: r.date || "", description: r.description || "", bank_category: r.bank_category || "",
+    value: parseFloat(r.value) || 0, type: r.type || "", jar: r.jar || ""
+  }));
+  let openingCount = 0;
+  outcomeRows = parsed.filter(r => {
+    if (r.description === OPENING_BALANCE_MARKER && startingBalances.hasOwnProperty(r.type)) {
+      startingBalances[r.type] = r.value;
+      openingCount++;
+      return false;
+    }
+    return true;
+  });
+  const detectedMonth = detectDominantMonth(parsed);
+  if (detectedMonth) lastImportedMonth = detectedMonth;
+  saveBalances();
+  markSaved(); // freshly loaded from disk — nothing unsaved yet
+  renderAll();
+  const openingNote = openingCount > 0 ? t("import.openingApplied", { n: openingCount }) : "";
+  const monthNote = detectedMonth ? t("import.importedMonth", { month: detectedMonth }) : "";
+  document.getElementById("loadStatus").innerHTML = `<div class="status-msg status-ok">${t("import.loadedOutcome", { n: outcomeRows.length, file: file.name, note: openingNote })}${monthNote}</div>`;
+  e.target.value = ""; // allow re-selecting the same file again later
+});
+
+const INCOME_COLS = ["date", "description", "bank_category", "value", "type", "income_type"];
+const OUTCOME_COLS = ["date", "description", "bank_category", "value", "type", "jar"];
+
+function monthFirstDay() {
+  return currentMonth() + "-01";
+}
+
+// Opening-balance rows let a downloaded month's CSV carry that month's starting balances,
+// so re-importing an old CSV later (to look at historical statements) restores them automatically.
+function buildOpeningBalanceIncomeRows() {
+  // Only positive starting balances are represented as income (money "coming in" at the start of tracking)
+  return BALANCE_TYPES
+    .filter(bt => Number(startingBalances[bt.key] || 0) > 0)
+    .map(bt => ({
+      date: monthFirstDay(), description: OPENING_BALANCE_MARKER, bank_category: OPENING_BALANCE_MARKER,
+      value: Number(startingBalances[bt.key] || 0), type: bt.key, income_type: "other"
+    }));
+}
+function buildOpeningBalanceOutcomeRows() {
+  // Negative starting balances (e.g. credit card debt) are represented as outcome
+  return BALANCE_TYPES
+    .filter(bt => Number(startingBalances[bt.key] || 0) < 0)
+    .map(bt => ({
+      date: monthFirstDay(), description: OPENING_BALANCE_MARKER, bank_category: OPENING_BALANCE_MARKER,
+      value: Number(startingBalances[bt.key] || 0), type: bt.key, jar: ""
+    }));
+}
+
+function doDownloadIncome() {
+  const rows = [...buildOpeningBalanceIncomeRows(), ...incomeRows];
+  downloadCSV(rows, INCOME_COLS, suggestedFilename("income"));
+}
+function doDownloadOutcome() {
+  const rows = [...buildOpeningBalanceOutcomeRows(), ...outcomeRows];
+  downloadCSV(rows, OUTCOME_COLS, suggestedFilename("outcome"));
+}
+
+// Saves both of the current month's CSVs. On browsers that support the File System Access API
+// (Chrome/Edge), each file opens a real "Save As" dialog so the user picks the folder/filename.
+// On browsers without support (Firefox/Safari), falls back to a normal browser download.
+async function saveCSVWithPicker(rows, columns, filename) {
+  const csv = rowsToCSV(rows, columns);
+  if (typeof window.showSaveFilePicker === "function") {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: filename,
+      types: [{ description: "CSV file", accept: { "text/csv": [".csv"] } }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    await writable.close();
+  } else {
+    downloadCSV(rows, columns, filename);
+  }
+}
+
+async function doSaveCsv() {
+  const btn = document.getElementById("saveCsvBtn");
+  try {
+    const incomeCombined = [...buildOpeningBalanceIncomeRows(), ...incomeRows];
+    const outcomeCombined = [...buildOpeningBalanceOutcomeRows(), ...outcomeRows];
+    await saveCSVWithPicker(incomeCombined, INCOME_COLS, suggestedFilename("income"));
+    await saveCSVWithPicker(outcomeCombined, OUTCOME_COLS, suggestedFilename("outcome"));
+    markSaved();
+  } catch (e) {
+    // AbortError happens when the user cancels a Save As dialog — not a real failure, just leave
+    // the button in its current (dirty) state so they can retry.
+    if (e && e.name === "AbortError") return;
+    console.error("Save CSV failed:", e);
+  }
+}
+document.getElementById("saveCsvBtn").addEventListener("click", doSaveCsv);
+updateSaveCsvBtn();
+
+document.getElementById("downloadIncomeBtn").addEventListener("click", doDownloadIncome);
+document.getElementById("downloadOutcomeBtn").addEventListener("click", doDownloadOutcome);
+document.getElementById("downloadIncomeBtn2").addEventListener("click", doDownloadIncome);
+document.getElementById("downloadOutcomeBtn2").addEventListener("click", doDownloadOutcome);
+
+document.getElementById("currencySelect").value = displayCurrency;
+document.getElementById("currencySelect").addEventListener("change", (e) => {
+  displayCurrency = e.target.value;
+  try { localStorage.setItem(CURRENCY_STORAGE_KEY, displayCurrency); } catch (err) { /* ignore */ }
+  renderAll();
+});
+
+applyTheme();
+applyLangToggleUI();
+renderTodayDate();
+renderAll();
+</script>
+</body>
+</html>
