@@ -20,6 +20,9 @@
     --paste-bg: #fffde7;
     --info: #1565c0;
     --info-bg: #e3f0fc;
+    --dup-bg: #fff59d;
+    --dup-border: #f5a623;
+    --dup-ink: #7a5900;
   }
   html[data-theme="dark"] {
     --bg: #14181a;
@@ -36,6 +39,9 @@
     --paste-bg: #2a2717;
     --info: #6fb3f2;
     --info-bg: #17293a;
+    --dup-bg: #6b5300;
+    --dup-border: #f0b429;
+    --dup-ink: #ffd873;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -203,6 +209,22 @@
     background: var(--accent-light);
   }
   .table-wrap { max-height: min(65vh, 560px); overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  /* Duplicate-row flagging: two rows in the same table sharing Date + Value + Description.
+     Uses a dedicated, more saturated yellow (--dup-bg) rather than the pale --paste-bg, which
+     was too close to the panel's white/dark background to read as a real highlight. */
+  tr.row-duplicate td { background: var(--dup-bg); }
+  tr.row-duplicate td:first-child { box-shadow: inset 4px 0 0 var(--dup-border); }
+  /* input[type="text"] elsewhere sets an opaque background that would otherwise hide this
+     row's yellow tint under the Date/Description/Additional info/Value fields */
+  tr.row-duplicate td input, tr.row-duplicate td select { background: var(--dup-bg); }
+  tr.row-duplicate-notice td {
+    background: var(--dup-bg);
+    color: var(--dup-ink);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-bottom: 1px solid var(--dup-border);
+  }
   /* Income/Outcome column widths: narrow Date and Value, wide Description and Additional info */
   #incomeTable, #outcomeTable { table-layout: fixed; }
   #incomeTable th:nth-child(1), #outcomeTable th:nth-child(1) { width: 8%; }   /* Date */
@@ -462,7 +484,8 @@
       <input type="month" id="monthFilter">
       <span id="monthStatusBadge" class="status-badge"></span>
       <span class="small" id="monthSummary"></span>
-      <button id="saveCsvBtn" class="save-csv-btn clean" style="margin-left:auto;"></button>
+      <button class="secondary" id="chooseFolderBtn" style="margin-left:auto;"></button>
+      <button id="saveCsvBtn" class="save-csv-btn clean"></button>
     </div>
     <div id="importedMonthMismatch"></div>
   </div>
@@ -641,6 +664,11 @@
         <li><b>Jar</b> (Outcome table only): which of the 6 jars this expense belongs to. This is what drives the dashboard. Imported expenses default to <code>NEC</code> (Necessities, the biggest jar) &mdash; review each row and reassign the ones that belong elsewhere.</li>
       </ul>
 
+      <h3>Duplicate detection</h3>
+      <p>Every time the Income or Outcome table is drawn &mdash; right after an import or paste, or after any edit &mdash; the app scans that table for rows that share the exact same <b>Date</b>, <b>Value</b>, and <b>Description</b> as another row in the same table. Any row involved in such a match gets a pale yellow background, and a matching yellow notice line reading <b>"&#9888; Duplicate detected, check"</b> appears directly underneath it. Income and Outcome are checked separately from each other &mdash; a match only counts if it's within the same table.</p>
+      <p>This exists to catch the most common data-entry mistake: importing the same CSV file twice, or pasting the same mBank text twice, which would otherwise silently double every affected row and inflate your totals without any obvious sign. The comparison is exact (after trimming whitespace) on all three fields, so two genuinely different transactions that happen to share a date and amount but have different descriptions won't be flagged.</p>
+      <p>The highlighting isn't a lock &mdash; it's just a flag. Delete the row that shouldn't be there (or edit one of the fields so they no longer match) and the yellow highlight and notice disappear from both rows the next time the table redraws.</p>
+
       <h3>Available balances</h3>
       <p>On the Dashboard, each of the three balance cards (Cash, Account, Credit card) shows a running total: the <b>starting balance</b> you set once (defaults to 0, editable any time) plus all Income minus all Outcome rows tagged with that Type, across your entire history &mdash; not just the selected month. Use the starting balance field to align the tool with your real-world balance the first time you use it, or reset it to zero at any point you want to restart tracking from scratch.</p>
       <p>Each balance card also shows a small badge in its top-right corner with that bucket's <b>net change for the selected month</b> (green if positive, red if negative), and the big number at the top of the section &mdash; <b>Total this month (Income &minus; Outcome, all types)</b> &mdash; shows your overall net result for the month across Cash, Account and Credit card combined, colored the same way.</p>
@@ -667,6 +695,13 @@
 
       <h3>Saving your work</h3>
       <p>Nothing is auto-saved to disk. The <b>Save CSV</b> button next to the Month picker on the Dashboard turns red the moment you edit, add, delete, or import any Income/Outcome row, and saves both <code>YYYYMM_income.csv</code> and <code>YYYYMM_outcome.csv</code> when clicked (<code>YYYYMM</code> is always the year and month currently selected in the Month picker). On Chrome/Edge it opens a real "Save As" dialog for each file so you choose the folder; on browsers without that support it falls back to a normal download. Once both files are saved, the button turns green again. The separate <b>Download CSV</b> buttons on the Import/Export and Income/Outcome tabs still work the same way as before, for a quick one-off download without the dialog. Keep your saved files somewhere safe (e.g. a synced folder); reload them next time via the file pickers on the Import/Export tab to continue where you left off.</p>
+
+      <h3>Choosing a save folder (and sharing the budget with someone else)</h3>
+      <p>Next to <b>Save CSV</b> on the Dashboard there's a <b>&#128193; Set save folder&hellip;</b> button. Click it once and pick any local folder &mdash; for example a folder kept in sync by Google Drive, Dropbox, or OneDrive. From that point on, every click of <b>Save CSV</b> and every <b>Download CSV</b> button (on the Import/Export, Income, and Outcome tabs) writes its file straight into that folder, silently, with no "Save As" dialog. The choice is remembered in the browser (via IndexedDB) even after closing the tab, restarting the browser, or restarting the computer, so you only have to set it up once per computer/browser.</p>
+      <p>This needs the <b>File System Access API</b>, which only Chrome and Edge currently support. On other browsers (Firefox, Safari) the button explains this and Save/Download simply fall back to the normal "Save As" dialog / plain download described above &mdash; nothing breaks, you just don't get the silent-write convenience.</p>
+      <p>The button's label always shows the currently chosen folder's name, so you can tell at a glance where you're saving. Click it again at any time to switch to a different folder. Occasionally, at the start of a new browser session, the very next save may ask you to reconfirm access to that folder &mdash; that's your browser's own permission system checking in again, not an error; approve it and saving continues as before.</p>
+      <p><b>Using this to work with someone else:</b> pick a folder that lives inside a Google Drive (or similar) location shared between both of you &mdash; on Windows this is usually a normal folder once Google Drive Desktop is installed; on Linux, Google Drive has no official app, but a tool like <code>rclone mount</code> can mount your Drive as a regular local folder that Chrome's folder picker can browse into just like any other. Both people then point their own copy of this app at that same synced folder using the <b>Set save folder</b> button.</p>
+      <p>Important: this is <b>not</b> real-time collaboration &mdash; there is no merging of simultaneous edits. Treat it like passing a spreadsheet back and forth: only one person should be actively editing at a time, and before you start making changes, re-import the latest files (Import/Export tab) so you're building on the other person's most recent save rather than overwriting it.</p>
 
       <h3>Outcome values must be negative</h3>
       <p>Every row on the Outcome tab represents money leaving a bucket, so its Value must be negative &mdash; e.g. <code>-120.50</code>, not <code>120.50</code>. When you click <b>+ Add row</b>, the new row's Value field is pre-filled with just a <code>-</code> so you can type the number straight after it. If a Value ever ends up positive (for example after a paste or manual edit), that field turns red with a warning tooltip until you fix the sign.</p>
@@ -733,6 +768,11 @@
         <li><b>Jar</b> (tylko tabela Outcome): do kt&oacute;rego z 6 s&#322;oik&oacute;w nale&#380;y ten wydatek. To w&#322;a&#347;nie steruje dashboardem. Zaimportowane wydatki domy&#347;lnie dostaj&#261; <code>NEC</code> (Potrzeby, najwi&#281;kszy s&#322;oik) &ndash; przejrzyj wiersze i przepisz te, kt&oacute;re nale&#380;&#261; gdzie indziej.</li>
       </ul>
 
+      <h3>Wykrywanie duplikatów</h3>
+      <p>Za każdym razem, gdy tabela Income lub Outcome jest rysowana na nowo — zaraz po imporcie lub wklejeniu danych, albo po dowolnej edycji — aplikacja sprawdza tę tabelę pod kątem wierszy, które mają dokładnie taką samą <b>Datę</b>, <b>Kwotę</b> i <b>Opis</b> jak inny wiersz w tej samej tabeli. Każdy wiersz biorący udział w takim dopasowaniu dostaje bladożółte tło, a bezpośrednio pod nim pojawia się pasujący żółty komunikat <b>"⚠ Wykryto duplikat, sprawdź"</b>. Income i Outcome są sprawdzane osobno — dopasowanie liczy się tylko w obrębie tej samej tabeli.</p>
+      <p>Funkcja ta wyłapuje najczęstszy błąd przy wprowadzaniu danych: dwukrotny import tego samego pliku CSV albo dwukrotne wklejenie tego samego tekstu z mBanku, co inaczej po cichu zdublowałoby każdy dotknięty wiersz i zawyżyło Twoje sumy bez żadnego wyraźnego sygnału. Porównanie jest dokładne (po przycięciu białych znaków) na wszystkich trzech polach, więc dwie faktycznie różne transakcje, które przypadkowo mają tę samą datę i kwotę, ale różny opis, nie zostaną oznaczone.</p>
+      <p>Podświetlenie to tylko ostrzeżenie, a nie blokada. Usuń wiersz, którego nie powinno tam być (albo zmień jedno z pól, aby przestały się zgadzać), a żółte podświetlenie i komunikat znikną z obu wierszy przy najbliższym odświeżeniu tabeli.</p>
+
       <h3>Dost&#281;pne salda</h3>
       <p>Na Dashboardzie ka&#380;da z trzech kart salda (Got&oacute;wka, Konto, Karta kredytowa) pokazuje bie&#380;&#261;c&#261; sum&#281;: <b>saldo pocz&#261;tkowe</b>, kt&oacute;re ustawiasz raz (domy&#347;lnie 0, edytowalne w dowolnym momencie), plus wszystkie wiersze Income minus wszystkie wiersze Outcome oznaczone tym Type, z ca&#322;ej historii &ndash; nie tylko z wybranego miesi&#261;ca. U&#380;yj pola salda pocz&#261;tkowego, aby dopasowa&#263; narz&#281;dzie do rzeczywistego salda przy pierwszym u&#380;yciu, albo wyzeruj je w dowolnym momencie, aby zacz&#261;&#263; &#347;ledzenie od nowa.</p>
       <p>Ka&#380;da karta salda pokazuje r&oacute;wnie&#380; ma&#322;y znacznik w prawym g&oacute;rnym rogu z <b>zmian&#261; netto dla wybranego miesi&#261;ca</b> (zielony, je&#347;li dodatnia, czerwony, je&#347;li ujemna), a du&#380;a liczba na g&oacute;rze sekcji &ndash; <b>Total this month (Income &minus; Outcome, all types)</b> &ndash; pokazuje &#322;&#261;czny wynik netto za miesi&#261;c dla Got&oacute;wki, Konta i Karty kredytowej razem, kolorowany w ten sam spos&oacute;b.</p>
@@ -759,6 +799,13 @@
 
       <h3>Zapisywanie pracy</h3>
       <p>Nic nie jest automatycznie zapisywane na dysku. Przycisk <b>Save CSV</b> obok selektora miesi&#261;ca na Dashboardzie zmienia si&#281; na czerwony, gdy tylko edytujesz, dodasz, usuniesz lub zaimportujesz jakikolwiek wiersz Income/Outcome, i zapisuje oba pliki <code>YYYYMM_income.csv</code> oraz <code>YYYYMM_outcome.csv</code> po klikni&#281;ciu (<code>YYYYMM</code> to zawsze rok i miesi&#261;c aktualnie wybrany w selektorze miesi&#261;ca). W Chrome/Edge otwiera prawdziwe okno "Zapisz jako" dla ka&#380;dego pliku, dzi&#281;ki czemu wybierasz folder; w przegl&#261;darkach bez tego wsparcia u&#380;ywa zwyk&#322;ego pobierania. Gdy oba pliki zostan&#261; zapisane, przycisk znowu robi si&#281; zielony. Osobne przyciski <b>Download CSV</b> w zak&#322;adkach Import/Export i Income/Outcome nadal dzia&#322;aj&#261; jak wcze&#347;niej, do szybkiego pojedynczego pobrania bez okna dialogowego. Przechowuj zapisane pliki w bezpiecznym miejscu (np. w synchronizowanym folderze); wczytaj je ponownie nast&#281;pnym razem przez selektory plik&oacute;w w zak&#322;adce Import/Export, aby kontynuowa&#263; prac&#281;.</p>
+
+      <h3>Wybór folderu zapisu (i dzielenie się budżetem z kimś innym)</h3>
+      <p>Obok przycisku <b>Save CSV</b> na Dashboardzie znajduje się przycisk <b>📁 Ustaw folder zapisu…</b>. Kliknij go raz i wybierz dowolny lokalny folder — na przykład folder synchronizowany przez Google Drive, Dropbox albo OneDrive. Od tego momentu każde kliknięcie <b>Save CSV</b> oraz każdy przycisk <b>Download CSV</b> (w zakładkach Import/Export, Przychód i Rozchód) zapisuje plik bezpośrednio w tym folderze, po cichu, bez okna "Zapisz jako". Wybór jest zapamiętywany w przeglądarce (przez IndexedDB) nawet po zamknięciu karty, ponownym uruchomieniu przeglądarki czy restarcie komputera, więc konfigurujesz to tylko raz na komputer/przeglądarkę.</p>
+      <p>Funkcja ta wymaga <b>File System Access API</b>, które obecnie obsługują tylko Chrome i Edge. W innych przeglądarkach (Firefox, Safari) przycisk wyjaśnia ten fakt, a Save/Download po prostu wracają do zwykłego okna "Zapisz jako" / normalnego pobierania opisanego wyżej — nic się nie psuje, tracisz tylko wygodę cichego zapisu.</p>
+      <p>Etykieta przycisku zawsze pokazuje nazwę aktualnie wybranego folderu, więc od razu widzisz, gdzie zapisujesz. Możesz w każdej chwili kliknąć go ponownie, aby wybrać inny folder. Czasami, na początku nowej sesji przeglądarki, pierwszy zapis może poprosić o ponowne potwierdzenie dostępu do tego folderu — to zwykłe zapytanie o uprawnienia ze strony przeglądarki, a nie błąd; zatwierdź je i zapis będzie działał dalej jak wcześniej.</p>
+      <p><b>Jak wykorzystać to do pracy z kimś innym:</b> wybierz folder znajdujący się w lokalizacji Google Drive (lub podobnej) współdzielonej między wami — w Windows to zwykle zwykły folder po zainstalowaniu Google Drive Desktop; w Linuksie Google Drive nie ma oficjalnej aplikacji, ale narzędzie takie jak <code>rclone mount</code> może zamontować Twój Dysk jako zwykły lokalny folder, który przeglądarka Chrome może normalnie przeglądać w oknie wyboru folderu. Obie osoby wskazują wtedy swoją kopię tej aplikacji na ten sam zsynchronizowany folder za pomocą przycisku <b>Ustaw folder zapisu</b>.</p>
+      <p>Ważne: to <b>nie jest</b> praca w czasie rzeczywistym — nie ma łączenia jednoczesnych zmian. Traktuj to jak przekazywanie sobie arkusza kalkulacyjnego: w danym momencie powinna edytować tylko jedna osoba, a przed rozpoczęciem zmian zaimportuj najnowsze pliki (zakładka Import/Export), aby budować na najnowszym zapisie drugiej osoby, a nie go nadpisywać.</p>
 
       <h3>Wartości Rozchodu muszą być ujemne</h3>
       <p>Ka&#380;dy wiersz w zak&#322;adce Rozch&oacute;d oznacza pieni&#261;dze wychodz&#261;ce z jakiego&#347; koszyka, wi&#281;c jego Kwota musi by&#263; ujemna &ndash; np. <code>-120.50</code>, nie <code>120.50</code>. Po klikni&#281;ciu <b>+ Dodaj wiersz</b>, pole Kwoty nowego wiersza jest wype&#322;nione samym znakiem <code>-</code>, wi&#281;c wystarczy dopisa&#263; liczb&#281; od razu po nim. Je&#347;li kwota kiedykolwiek okaże si&#281; dodatnia (np. po wklejeniu lub r&#281;cznej edycji), pole zmieni kolor na czerwony z podpowiedzi&#261; ostrzegawcz&#261;, dopóki nie poprawisz znaku.</p>
@@ -825,7 +872,7 @@ const I18N = {
     "import.importBtn": "Import pasted text",
     "import.clearBtn": "Clear",
     "import.step3Title": "3. Save your work",
-    "import.step3Desc": "Download the current Income/Outcome tables as CSV files. Save them with the suggested filenames so you can reload the same month later.",
+    "import.step3Desc": "Download the current Income/Outcome tables as CSV files. Save them with the suggested filenames so you can reload the same month later. Tip: use the \"📁 Set save folder…\" button on the Dashboard tab to remember a folder (e.g. a Google Drive-synced folder) — every Save/Download will then write straight there with no dialog.",
     "import.downloadIncomeBtn": "Download Income CSV",
     "import.downloadOutcomeBtn": "Download Outcome CSV",
     "import.noText": "No text found. Paste mBank text first.",
@@ -837,6 +884,7 @@ const I18N = {
     "dashboard.mismatchWarning": "⚠ Mismatch: you are viewing {viewMonth}, but the last imported CSV data is for {dataMonth}. Switch the month above to see it, or re-import the file for {viewMonth}.",
     "table.addRow": "+ Add row",
     "table.downloadCsv": "Download CSV",
+    "table.duplicateWarning": "⚠ Duplicate detected, check",
     "col.date": "Date",
     "col.description": "Description",
     "col.bankCategory": "Additional info",
@@ -844,6 +892,9 @@ const I18N = {
     "outcome.valueHint": "Outcome amounts must be negative — enter them with a leading \"-\" (e.g. -120.50). New rows start with \"-\" pre-filled; just type the number after it.",
     "dashboard.saveCsvUnsaved": "Save CSV (unsaved changes)",
     "dashboard.saveCsvSaved": "Save CSV (saved)",
+    "dashboard.chooseFolderBtn": "📁 Set save folder…",
+    "dashboard.folderSetHint": "CSV files save here. Click to choose a different folder.",
+    "dashboard.folderNotSupported": "This browser can't remember a save folder (needs Chrome or Edge). Files will download to your default Downloads folder instead.",
     "dashboard.jarsUnmarked": "Jars missing: {n} outcome row(s) without a jar",
     "dashboard.jarsFilled": "Jars filled — all outcome rows assigned",
     "dashboard.allJarsGreen": "You are on the best way to Your Financial Freedom ;)",
@@ -901,7 +952,7 @@ const I18N = {
     "import.importBtn": "Importuj wklejony tekst",
     "import.clearBtn": "Wyczyść",
     "import.step3Title": "3. Zapisz swoją pracę",
-    "import.step3Desc": "Pobierz bieżące tabele Przychód/Rozchód jako pliki CSV. Zapisuj je pod sugerowanymi nazwami, aby móc wczytać ten sam miesiąc później.",
+    "import.step3Desc": "Pobierz bieżące tabele Przychód/Rozchód jako pliki CSV. Zapisuj je pod sugerowanymi nazwami, aby móc wczytać ten sam miesiąc później. Wskazówka: użyj przycisku „📁 Ustaw folder zapisu…” na zakładce Dashboard, aby zapamiętać folder (np. folder zsynchronizowany z Google Drive) — wtedy każdy zapis/pobranie trafi tam bezpośrednio, bez okna dialogowego.",
     "import.downloadIncomeBtn": "Pobierz CSV Przychód",
     "import.downloadOutcomeBtn": "Pobierz CSV Rozchód",
     "import.noText": "Nie znaleziono tekstu. Najpierw wklej tekst z mBanku.",
@@ -913,6 +964,7 @@ const I18N = {
     "dashboard.mismatchWarning": "⚠ Niezgodność: przeglądasz {viewMonth}, ale ostatnio zaimportowane dane CSV dotyczą {dataMonth}. Zmień miesiąc powyżej, aby je zobaczyć, albo ponownie zaimportuj plik dla {viewMonth}.",
     "table.addRow": "+ Dodaj wiersz",
     "table.downloadCsv": "Pobierz CSV",
+    "table.duplicateWarning": "⚠ Wykryto duplikat, sprawdź",
     "col.date": "Data",
     "col.description": "Opis",
     "col.bankCategory": "Dodatkowe informacje",
@@ -920,6 +972,9 @@ const I18N = {
     "outcome.valueHint": "Kwoty Rozchodu muszą być ujemne — wpisuj je ze znakiem „-” na początku (np. -120.50). Nowe wiersze zaczynają się od wpisanego „-”; wystarczy dopisać liczbę.",
     "dashboard.saveCsvUnsaved": "Zapisz CSV (niezapisane zmiany)",
     "dashboard.saveCsvSaved": "Zapisz CSV (zapisano)",
+    "dashboard.chooseFolderBtn": "📁 Ustaw folder zapisu…",
+    "dashboard.folderSetHint": "Pliki CSV zapisują się tutaj. Kliknij, aby wybrać inny folder.",
+    "dashboard.folderNotSupported": "Ta przeglądarka nie potrafi zapamiętać folderu zapisu (wymaga Chrome lub Edge). Pliki będą pobierane do domyślnego folderu Pobrane.",
     "dashboard.jarsUnmarked": "Brak słoików: {n} wiersz(y) Rozchodu bez słoika",
     "dashboard.jarsFilled": "Słoiki uzupełnione — wszystkie wiersze Rozchodu przypisane",
     "dashboard.allJarsGreen": "Jesteś na najlepszej drodze do Wolności Finansowej ;)",
@@ -1040,6 +1095,94 @@ function updateSaveCsvBtn() {
   if (!btn) return;
   btn.className = hasUnsavedChanges ? "save-csv-btn dirty" : "save-csv-btn clean";
   btn.textContent = hasUnsavedChanges ? t("dashboard.saveCsvUnsaved") : t("dashboard.saveCsvSaved");
+}
+
+/* ===================== Save folder (File System Access API) =====================
+   Lets the user pick a local folder once (e.g. a Google Drive-synced folder shared
+   with someone else) and remembers it in IndexedDB across sessions. Once set, every
+   CSV save/download writes straight into that folder instead of the browser's
+   default Downloads folder, so both people can keep working from the same files. */
+const FS_DB_NAME = "lechuteqBudget";
+const FS_STORE_NAME = "handles";
+const FS_FOLDER_KEY = "saveFolder";
+let saveDirHandle = null;
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(FS_DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(FS_STORE_NAME);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbGetHandle() {
+  try {
+    const db = await idbOpen();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(FS_STORE_NAME, "readonly");
+      const req = tx.objectStore(FS_STORE_NAME).get(FS_FOLDER_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) { return null; }
+}
+async function idbSetHandle(handle) {
+  try {
+    const db = await idbOpen();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(FS_STORE_NAME, "readwrite");
+      tx.objectStore(FS_STORE_NAME).put(handle, FS_FOLDER_KEY);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) { /* ignore */ }
+}
+async function verifyFolderPermission(handle, requestIfNeeded) {
+  const opts = { mode: "readwrite" };
+  if ((await handle.queryPermission(opts)) === "granted") return true;
+  if (!requestIfNeeded) return false;
+  try { return (await handle.requestPermission(opts)) === "granted"; }
+  catch (e) { return false; }
+}
+async function restoreSaveFolder() {
+  if (!("indexedDB" in window) || typeof window.showDirectoryPicker !== "function") return;
+  const handle = await idbGetHandle();
+  if (handle) {
+    saveDirHandle = handle;
+    updateFolderUI();
+  }
+}
+async function chooseSaveFolder() {
+  if (typeof window.showDirectoryPicker !== "function") {
+    alert(t("dashboard.folderNotSupported"));
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+    saveDirHandle = handle;
+    await idbSetHandle(handle);
+    updateFolderUI();
+  } catch (e) {
+    if (e && e.name !== "AbortError") console.error("Choose folder failed:", e);
+  }
+}
+function updateFolderUI() {
+  const btn = document.getElementById("chooseFolderBtn");
+  if (!btn) return;
+  btn.textContent = saveDirHandle ? `📁 ${saveDirHandle.name}` : t("dashboard.chooseFolderBtn");
+  btn.title = saveDirHandle ? t("dashboard.folderSetHint") : "";
+}
+// Writes directly into the remembered folder if one is set and permission is granted;
+// returns true on success so callers can fall back to the picker/download otherwise.
+async function writeCSVToFolder(csv, filename) {
+  if (!saveDirHandle) return false;
+  const ok = await verifyFolderPermission(saveDirHandle, true);
+  if (!ok) return false;
+  const fileHandle = await saveDirHandle.getFileHandle(filename, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  await writable.close();
+  return true;
 }
 
 const BAL_STORAGE_KEY = "lechuteqBudget.startingBalances";
@@ -1288,12 +1431,28 @@ function wireSortableHeaders(tableId, tableName, rows, onChange) {
   });
 }
 
+// Flags rows that share the same Date + Value + Description as another row in the same
+// table — almost always caused by importing or pasting the same transactions twice.
+function findDuplicateIndices(rows) {
+  const groups = new Map();
+  rows.forEach((r, idx) => {
+    const key = `${String(r.date ?? "").trim()}|${numVal(r)}|${String(r.description ?? "").trim()}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(idx);
+  });
+  const dup = new Set();
+  groups.forEach(idxList => { if (idxList.length > 1) idxList.forEach(i => dup.add(i)); });
+  return dup;
+}
+
 function renderIncomeTable() {
   applySort(incomeRows, "income");
+  const dupIdx = findDuplicateIndices(incomeRows);
   const body = document.getElementById("incomeBody");
   body.innerHTML = "";
   incomeRows.forEach((row, idx) => {
     const tr = document.createElement("tr");
+    if (dupIdx.has(idx)) tr.className = "row-duplicate";
     tr.innerHTML = `
       <td><input type="text" data-field="date" value="${escapeAttr(row.date)}"></td>
       <td><input type="text" data-field="description" value="${escapeAttr(row.description)}"></td>
@@ -1305,6 +1464,12 @@ function renderIncomeTable() {
     `;
     wireRow(tr, idx, incomeRows, renderAll);
     body.appendChild(tr);
+    if (dupIdx.has(idx)) {
+      const notice = document.createElement("tr");
+      notice.className = "row-duplicate-notice";
+      notice.innerHTML = `<td colspan="7">${t("table.duplicateWarning")}</td>`;
+      body.appendChild(notice);
+    }
   });
   const totalEl = document.getElementById("incomeTotalLine");
   if (totalEl) {
@@ -1318,12 +1483,14 @@ function renderIncomeTable() {
 
 function renderOutcomeTable() {
   applySort(outcomeRows, "outcome");
+  const dupIdx = findDuplicateIndices(outcomeRows);
   const body = document.getElementById("outcomeBody");
   body.innerHTML = "";
   outcomeRows.forEach((row, idx) => {
     const tr = document.createElement("tr");
     const numVal = Number(row.value);
     const isInvalid = !isNaN(numVal) && numVal > 0;
+    if (dupIdx.has(idx)) tr.className = "row-duplicate";
     tr.innerHTML = `
       <td><input type="text" data-field="date" value="${escapeAttr(row.date)}"></td>
       <td><input type="text" data-field="description" value="${escapeAttr(row.description)}"></td>
@@ -1335,6 +1502,12 @@ function renderOutcomeTable() {
     `;
     wireRow(tr, idx, outcomeRows, renderAll, { negativeOnly: true });
     body.appendChild(tr);
+    if (dupIdx.has(idx)) {
+      const notice = document.createElement("tr");
+      notice.className = "row-duplicate-notice";
+      notice.innerHTML = `<td colspan="7">${t("table.duplicateWarning")}</td>`;
+      body.appendChild(notice);
+    }
   });
   const totalEl = document.getElementById("outcomeTotalLine");
   if (totalEl) {
@@ -1779,6 +1952,8 @@ document.querySelectorAll("#langToggle [data-lang-choice]").forEach(btn => {
     applyLangToggleUI();
     renderTodayDate();
     renderAll();
+    updateSaveCsvBtn();
+    updateFolderUI();
   });
 });
 
@@ -1916,20 +2091,22 @@ function buildOpeningBalanceOutcomeRows() {
     }));
 }
 
-function doDownloadIncome() {
+async function doDownloadIncome() {
   const rows = [...buildOpeningBalanceIncomeRows(), ...incomeRows];
-  downloadCSV(rows, INCOME_COLS, suggestedFilename("income"));
+  await saveCSVSmart(rows, INCOME_COLS, suggestedFilename("income"));
 }
-function doDownloadOutcome() {
+async function doDownloadOutcome() {
   const rows = [...buildOpeningBalanceOutcomeRows(), ...outcomeRows];
-  downloadCSV(rows, OUTCOME_COLS, suggestedFilename("outcome"));
+  await saveCSVSmart(rows, OUTCOME_COLS, suggestedFilename("outcome"));
 }
 
-// Saves both of the current month's CSVs. On browsers that support the File System Access API
-// (Chrome/Edge), each file opens a real "Save As" dialog so the user picks the folder/filename.
-// On browsers without support (Firefox/Safari), falls back to a normal browser download.
-async function saveCSVWithPicker(rows, columns, filename) {
+// Writes a CSV using, in order of preference: (1) the remembered save folder, silently, so a
+// shared/synced folder just stays in sync with no dialog; (2) on browsers that support the File
+// System Access API (Chrome/Edge) but have no folder set yet, a real "Save As" dialog; (3) on
+// browsers without support (Firefox/Safari), a normal browser download.
+async function saveCSVSmart(rows, columns, filename) {
   const csv = rowsToCSV(rows, columns);
+  if (await writeCSVToFolder(csv, filename)) return;
   if (typeof window.showSaveFilePicker === "function") {
     const handle = await window.showSaveFilePicker({
       suggestedName: filename,
@@ -1944,12 +2121,11 @@ async function saveCSVWithPicker(rows, columns, filename) {
 }
 
 async function doSaveCsv() {
-  const btn = document.getElementById("saveCsvBtn");
   try {
     const incomeCombined = [...buildOpeningBalanceIncomeRows(), ...incomeRows];
     const outcomeCombined = [...buildOpeningBalanceOutcomeRows(), ...outcomeRows];
-    await saveCSVWithPicker(incomeCombined, INCOME_COLS, suggestedFilename("income"));
-    await saveCSVWithPicker(outcomeCombined, OUTCOME_COLS, suggestedFilename("outcome"));
+    await saveCSVSmart(incomeCombined, INCOME_COLS, suggestedFilename("income"));
+    await saveCSVSmart(outcomeCombined, OUTCOME_COLS, suggestedFilename("outcome"));
     markSaved();
   } catch (e) {
     // AbortError happens when the user cancels a Save As dialog — not a real failure, just leave
@@ -1959,7 +2135,10 @@ async function doSaveCsv() {
   }
 }
 document.getElementById("saveCsvBtn").addEventListener("click", doSaveCsv);
+document.getElementById("chooseFolderBtn").addEventListener("click", chooseSaveFolder);
 updateSaveCsvBtn();
+updateFolderUI();
+restoreSaveFolder();
 
 document.getElementById("downloadIncomeBtn").addEventListener("click", doDownloadIncome);
 document.getElementById("downloadOutcomeBtn").addEventListener("click", doDownloadOutcome);

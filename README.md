@@ -19,8 +19,10 @@ Most budgeting apps want an account, a subscription, and your bank credentials. 
 - **Available balances** — Cash, Account, and Credit Card balances computed from an editable starting balance plus your transaction history, with monthly net-change badges. To pay off a credit card (or move money between wallets generally), add an Outcome row with type `internal`: it moves real money — Account balance decreases, Credit Card balance is credited — while staying out of your Income/Outcome totals and jar tracking, since it's not real spending.
 - **Historical / current / prediction indicator** — the month picker tells you whether you're looking at a closed past month, the month you're actively tracking, or a future month you're forecasting. If the month you're viewing doesn't match the month of the CSV data you last imported, a clear mismatch warning appears so you're never confused about what you're looking at.
 - **Input validation** — Outcome amounts must be negative; new rows come pre-filled with a `-` sign and any positive outcome value is flagged in red until corrected.
+- **Duplicate detection** — any two rows in the same Income or Outcome table that share the same Date, Value, and Description are flagged with a yellow background and a "⚠ Duplicate detected, check" notice underneath, live on every render (import, paste, edit, or delete). Catches the classic mistake of importing or pasting the same transactions twice, which would otherwise silently double them and inflate your totals.
 - **Sortable tables** — click any Date, Value, Type, Income type, or Jar column header on the Income/Outcome tabs to sort by it; click again to reverse the order.
-- **Save CSV button** — next to the Month picker, turns red the moment you edit, add, delete, or import a row, and saves both of the month's CSVs when clicked (with a native "Save As" folder picker on Chrome/Edge); turns green again once saved.
+- **Save CSV button** — next to the Month picker, turns red the moment you edit, add, delete, or import a row, and saves both of the month's CSVs when clicked; turns green again once saved. On Chrome/Edge with no save folder set, it opens a native "Save As" dialog per file; with a save folder set (see below), it writes both files there silently with no dialog at all.
+- **Remembered save folder** — a "📁 Set save folder…" button next to Save CSV lets you pick a local folder once (Chrome/Edge only, via the File System Access API); every future Save/Download writes straight into it, no dialog, and the choice persists across browser restarts. This is what makes sharing the budget with someone else practical — see [Working with someone else](#working-with-someone-else) below.
 - **CSV-based storage** — two files per month (`YYYYMM_income.csv`, `YYYYMM_outcome.csv`), plain text, readable in Excel, Google Sheets, or any spreadsheet tool. Opening balances travel with the file so reloading an old month restores its starting point automatically.
 - **Dark mode & English/Polish** — full UI translation, not just labels; both preferences persist across sessions.
 - **Multi-currency label** — switch the symbol shown next to amounts between PLN, EUR, or USD; this only relabels the numbers, it never converts or recalculates them — every figure is always the same underlying PLN value.
@@ -34,6 +36,27 @@ Most budgeting apps want an account, a subscription, and your bank credentials. 
 5. Click **Save CSV** (next to the Month picker) to save your work — it's red while you have unsaved changes and turns green once saved. Reload the same files next time via the file pickers on the Import/Export tab.
 
 Full instructions, in English and Polish, are built into the app's **Manual** tab.
+
+## Working with someone else
+
+This is still a local, single-file app with no server and no accounts — but you can use it with a second person by pointing both of your copies at the same synced folder (e.g. a shared Google Drive folder) and taking turns editing.
+
+**How it works:** click the **📁 Set save folder…** button next to Save CSV on the Dashboard, and pick a local folder — one kept in sync by Google Drive, Dropbox, OneDrive, or similar. From then on, every **Save CSV** and every **Download CSV** button writes its file straight into that folder, silently, with no dialog. The choice is remembered (via the browser's IndexedDB) across restarts, so it's a one-time setup per computer/browser. This feature needs the **File System Access API**, supported by Chrome and Edge only; on other browsers the button explains this and everything falls back to the normal Save As dialog / download.
+
+**Setting up the shared folder:**
+
+1. Share a Google Drive folder between both accounts (drive.google.com → right-click the folder → **Share**).
+2. **Windows:** if Google Drive Desktop is installed, the shared folder just appears as a normal folder once accepted — no extra setup.
+3. **Linux:** Google Drive has no official desktop client. The common workaround is [`rclone`](https://rclone.org/drive/) mounted as a local folder:
+   ```
+   rclone config          # create a remote (interactive, opens a browser to authorize)
+   mkdir -p ~/GoogleDrive
+   rclone mount gdrive: ~/GoogleDrive --vfs-cache-mode writes --daemon
+   ```
+   Set up a `systemd --user` service for `rclone mount` if you want it to reconnect automatically on every login, so the folder is always there without re-running the command by hand.
+4. In the app, click **Set save folder** and browse into that shared folder (or a subfolder of it) on each person's machine.
+
+**Important limitation:** this is asynchronous, not real-time collaboration — there's no merging of simultaneous edits. Treat it like passing a spreadsheet back and forth: only one person edits at a time, and before making changes, re-import the latest CSVs (Import/Export tab) so you build on the other person's most recent save instead of overwriting it.
 
 ## Sample data
 
